@@ -7,3 +7,4 @@
 - Preservar o histórico de commits, tags e releases no GitHub. A preferência de remoção é local; não apagar versões do GitHub sem pedido explícito.
 
 - Nome atual: CodePing, executável principal CodePing.exe. ClaudeAlerta.exe é apphost de compatibilidade da mesma versão; manter os dois idênticos. Preservar mutex, marcador de hook, pasta de dados e caminho de instalação históricos. Nunca manter DLLs/runtimeconfigs antigos na publicação.
+- Repositório oficial: https://github.com/victorcqueiroz/CodePing. Usar este endereço nos remotes, links de documentação, downloads e futuras publicações.

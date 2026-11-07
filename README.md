@@ -1,6 +1,6 @@
 # CodePing
 
-![CodePing](Assets/codeping-logo.svg)
+![CodePing](Assets/codeping-preview.png)
 
 **Um aviso breve quando o Claude Code precisar de você. Uma fila para quando você puder voltar.**
 
@@ -12,9 +12,47 @@ Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompa
 
 *Capturas da aplicação real com dados fictícios de teste.*
 
+## Funcionalidades
+
+| Recurso | O que você pode fazer |
+| --- | --- |
+| **Vários projetos e conversas** | Acompanhar sessões simultâneas, com identificação por projeto e conversa. |
+| **Alertas de ação e conclusão** | Receber avisos de perguntas, autorizações, planos aguardando aprovação, solicitações de entrada, respostas concluídas e erros. |
+| **Aviso breve com leitura pelo mouse** | Ver um popup de três segundos sem perder o foco; mantê-lo aberto passando o mouse sobre ele. |
+| **Som e popup independentes** | Escolher os canais globais de aviso e personalizar o som por perfil. |
+| **Fila persistente** | Consultar solicitações ainda pendentes, inclusive depois de reiniciar o programa. |
+| **Adiamento individual** | Adiar cada solicitação por 5, 15 ou 30 minutos; no popup, adiar por 15 minutos. |
+| **Lembretes limitados** | Usar repetição progressiva, intervalo fixo ou nenhuma repetição automática. |
+| **Perfis visíveis** | Alternar entre Normal, Ocupado e Silencioso, com as opções de cada perfil sempre abertas. |
+| **Retomada e resumo** | Programar o retorno ao Normal ou usar Voltei e consultar o que aconteceu durante sua ausência. |
+| **Nomes reconhecíveis** | Usar o título personalizado recebido do Claude ou escolher um apelido local para cada conversa e projeto. |
+| **Regras por projeto** | Fixar, silenciar, escolher categorias e ajustar lembretes sem alterar os demais projetos. |
+| **Histórico local** | Consultar respostas confirmadas, conclusões, erros e encerramentos, com retenção de 24 horas e até 500 atividades. |
+| **Retorno ao editor** | Abrir a pasta do projeto no VS Code ou tentar restaurar sua janela existente. |
+| **Bandeja do Windows** | Manter o monitor em segundo plano, abrir o painel, testar avisos e silenciar temporariamente. |
+| **Seis idiomas** | Trocar imediatamente entre português, inglês, espanhol, alemão, francês e chinês simplificado. |
+| **Diagnóstico** | Verificar integração, executável, escrita da fila e horário do último evento recebido. |
+| **Uso local e acessível** | Usar navegação por teclado, foco visível e ajustes de alto contraste, sem enviar dados para serviços de rede. |
+| **Identidade e atualização compatível** | Usar a logo CodePing, manter configurações anteriores e conservar somente a release local atual pelo empacotamento. |
+
+## Quais situações geram avisos
+
+| Situação | Aviso ou comportamento |
+| --- | --- |
+| Claude pede permissão para uma ferramenta | **Autorização necessária**. |
+| Claude usa AskUserQuestion | **Claude fez uma pergunta**. |
+| Claude envia um plano para aprovação com ExitPlanMode | **Plano aguardando aprovação**. |
+| Integração pede uma resposta, inclusive via notificações de entrada/MCP | **Resposta necessária**, quando o evento correspondente é recebido. |
+| Claude encerra uma resposta | **Resposta concluída**. Isso não comprova que a tarefa inteira terminou. |
+| Claude emite StopFailure | **Claude interrompido por erro**. |
+| Sessão inicia, envia um novo prompt ou usa ferramentas comuns | Atualiza o estado da sessão; não gera um popup para cada atividade. |
+| Sessão encerra | Retira suas pendências e registra o encerramento no histórico. |
+
+Os avisos dependem das preferências globais, do perfil e das regras do projeto. O CodePing acompanha eventos do Claude Code; a inatividade do VS Code, por si só, não dispara um aviso.
+
 ## Baixar e executar
 
-1. Abra a [versão mais recente](https://github.com/victorcqueiroz/Claude-Alert/releases/latest) e baixe `CodePing-1.6.0-win-x64.zip`.
+1. Abra a [versão mais recente](https://github.com/victorcqueiroz/CodePing/releases/latest) e baixe `CodePing-1.6.0-win-x64.zip`.
 2. Extraia **todos os arquivos** para uma pasta definitiva e abra `CodePing.exe`.
 3. Abra **Preferências → Ativar integração**. Se já estiver configurada, a ação aparece como **Atualizar integração**.
 4. Abra uma nova conversa do Claude Code no VS Code para carregar a configuração.
@@ -30,13 +68,25 @@ Get-FileHash .\CodePing-1.6.0-win-x64.zip -Algorithm SHA256
 
 Mantenha os arquivos do pacote juntos. Os hooks guardam o caminho do executável; se mudar de pasta, atualize a integração na nova localização.
 
+### Avisos e funcionamento na bandeja
+
+Em **Preferências**, som e popup podem ser ligados ou desligados separadamente. O som também depende da opção do perfil; Silencioso bloqueia ambos. Desligar avisos não interrompe a coleta de eventos nem apaga as pendências.
+
+O popup aparece no canto inferior direito da área útil do monitor onde está o ponteiro, permanece sobre outras janelas e não solicita o foco da digitação. Mostra projeto, conversa, estado e contagem regressiva. Use **Abrir VS Code** para voltar ao projeto; solicitações pendentes oferecem também **Adiar 15 min**. O menu de contexto do aviso permite silenciar por cinco minutos.
+
+Os três segundos continuam correndo com o mouse sobre o aviso. Se o prazo vencer durante a leitura, ele mostra **Em leitura** e permanece aberto. Ao retirar o mouse depois do prazo, fecha imediatamente; sair antes usa somente o tempo restante.
+
+Fechar ou minimizar o painel o recolhe na bandeja e mantém o monitor funcionando. Dê duplo clique no ícone para abrir novamente. O menu da bandeja permite abrir o painel, testar um aviso, silenciar por cinco minutos, voltar ao Normal, desativar a integração e sair. Uma segunda abertura do executável reaproveita a instância existente.
+
+Se a integração estiver ativa, um próximo evento do Claude pode iniciar o monitor novamente após **Sair**. Isso não equivale a um registro de inicialização automática no login do Windows.
+
 ## Marca e compatibilidade
 
 CodePing é o novo nome do antigo Claude Alert / Claude Alerta. A logo combina um símbolo de código com um ponto de notificação; o azul acompanha o tema Claro, e o verde identifica o ping.
 
 O pacote traz **CodePing.exe** como executável principal. `ClaudeAlerta.exe` é uma cópia do apphost **desta mesma versão**, para manter funcionando atalhos e hooks que já carregaram o caminho antigo. Ambos usam o mesmo monitor e os mesmos dados, sem iniciar duas instâncias. Atualize a integração para usar o nome novo.
 
-Os dados continuam em `%LOCALAPPDATA%\ClaudeAlerta`, preservando preferências, idiomas, perfis, apelidos, pendências e histórico. Na máquina de desenvolvimento, a pasta de instalação continua `release/ClaudeAlerta`; o arquivo principal agora é `CodePing.exe`. O repositório GitHub mantém seu endereço atual.
+Os dados continuam em `%LOCALAPPDATA%\ClaudeAlerta`, preservando preferências, idiomas, perfis, apelidos, pendências e histórico. Na máquina de desenvolvimento, a pasta de instalação continua `release/ClaudeAlerta`; o arquivo principal agora é `CodePing.exe`. O endereço oficial do repositório é [victorcqueiroz/CodePing](https://github.com/victorcqueiroz/CodePing).
 
 Os arquivos da marca estão em [Assets](Assets/README.md): SVG editável, PNG transparente e ICO com nove tamanhos. Para gerar novamente os PNGs e o ICO no Windows, use `scripts/brand-assets.ps1`.
 
@@ -181,6 +231,20 @@ A gravação usa troca atômica de arquivo. Se um arquivo não puder ser restaur
 
 A integração altera `~/.claude/settings.json`, preservando outras configurações e hooks e criando uma cópia `settings.json.claude-alerta-*.bak` antes da alteração. Para desativar, escolha **Desativar integração** na bandeja e depois **Sair**. Apenas sair permite que o próximo evento inicie o monitor novamente.
 
+## Comandos disponíveis
+
+Execute na pasta extraída do aplicativo:
+
+| Comando | Ação |
+| --- | --- |
+| `.\CodePing.exe` | Abre o painel ou solicita a abertura da instância já existente. |
+| `.\CodePing.exe --tray` | Inicia o monitor recolhido na bandeja. |
+| `.\CodePing.exe --install-hooks` | Instala ou atualiza a integração, preservando outras configurações e criando backup quando já há um arquivo. |
+| `.\CodePing.exe --remove-hooks` | Remove somente os handlers pertencentes ao aplicativo. |
+| `.\CodePing.exe --shutdown` | Solicita a saída do monitor em execução. |
+
+Os scripts de teste usam modos de diagnóstico com armazenamento isolado; não é necessário usá-los para monitorar o Claude Code.
+
 ## Limitações
 
 - Monitora sessões **locais** da conta Windows, inclusive no terminal; não é exclusivo da extensão do VS Code.
@@ -189,6 +253,7 @@ A integração altera `~/.claude/settings.json`, preservando outras configuraç�
 - `PermissionRequest` não fornece `tool_use_id`. Quando não é possível correlacionar com segurança uma permissão paralela, ela fica pendente até uma confirmação inequívoca, o encerramento da sessão ou a expiração.
 - Eventos perdidos ou fora de ordem podem deixar um estado sem confirmação. Confira a conversa no Claude; o monitor não toma decisões no seu lugar.
 - O retorno ao VS Code não identifica a conversa exata. Jogos em tela cheia exclusiva podem encobrir o aviso.
+- Há um popup por vez; um novo aviso pode substituir o anterior, inclusive durante a leitura com o mouse. As solicitações continuam disponíveis na fila e os eventos de conclusão/erro no histórico.
 - A limpeza ocorre enquanto o monitor está aberto ou quando inicia novamente; não há um serviço de limpeza com o aplicativo encerrado.
 
 ## Compilar, testar e empacotar
@@ -196,8 +261,8 @@ A integração altera `~/.claude/settings.json`, preservando outras configuraç�
 Requer [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), Windows x64 e PowerShell 7:
 
 ```powershell
-git clone https://github.com/victorcqueiroz/Claude-Alert.git
-cd Claude-Alert
+git clone https://github.com/victorcqueiroz/CodePing.git
+cd CodePing
 .\scripts\build.ps1
 .\scripts\test.ps1 -SkipBuild -Ui
 .\scripts\package.ps1 -SkipBuild
@@ -220,13 +285,15 @@ A limpeza exige um pacote atual válido. Ela só remove pastas antigas identific
 
 Depois de compilar, execute `scripts/test-cleanup.ps1` para testar essa retenção em pastas isoladas, incluindo a preservação de outros projetos e a integração com o empacotamento.
 
-Sem o script:
+Para somente compilar o executável pelo SDK:
 
 ```powershell
 dotnet publish .\ClaudeAlerta.csproj -c Release -r win-x64 --self-contained true -o .\artifacts\publish\win-x64
 ```
 
 Os testes usam armazenamento isolado em `artifacts/tests/`, preservando as configurações pessoais do Claude. `-Ui` exige uma sessão Windows com área de trabalho disponível e pode mostrar janelas brevemente. Os resultados, evidências e limites estão em [VALIDACAO.md](VALIDACAO.md).
+
+Prefira `scripts/build.ps1` para preparar uma distribuição: ele cria uma publicação limpa, inclui documentação e arquivos da marca e gera o apphost de compatibilidade `ClaudeAlerta.exe`. A chamada direta ao SDK não executa essas etapas adicionais. Alterações apenas na documentação não exigem uma nova versão do executável ou substituição dos checksums de uma release já publicada.
 
 ## Estrutura
 
@@ -236,8 +303,11 @@ Core.cs                  Armazenamento, filtragem e instalação dos hooks
 MonitorModel.cs          Solicitações independentes, histórico e persistência
 Preferences.cs           Perfis, regras por projeto e política de lembretes
 Dashboard.xaml/.cs       Navegação lateral, sessões, perfis e diagnóstico
-AlertCard.xaml(.cs)       Aviso com recolhimento em três segundos
+AlertCard.xaml(.cs)       Aviso de três segundos e leitura com o mouse
+ConversationEditor.*     Editor de apelido local da conversa
+ConversationNames.cs     Normalização e limite dos nomes
 ClaroTheme.xaml          Tema Claro e estilos compartilhados
+Assets/                  Logo SVG/XAML, PNGs, ICO e guia da marca
 Localization.cs          Aplicação e fallback de idiomas
 Locales/                 Seis catálogos incorporados
 SelfTest.cs / UiCheck.cs  Testes isolados do monitor e da interface
@@ -245,4 +315,4 @@ scripts/                 Compilação, testes e pacote versionado
 docs/images/             Capturas de demonstração
 ```
 
-Não há pacotes de terceiros declarados. Os ícones e as fontes são recursos de sistema do Windows.
+Não há pacotes de terceiros declarados. A logo é um recurso próprio do projeto; os demais glifos e as fontes usam recursos de sistema do Windows.
