@@ -1,264 +1,266 @@
 # CodePing
 
+**English** · [Português](README.pt-BR.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [简体中文](README.zh-Hans.md)
+
 ![CodePing](Assets/codeping-preview.png)
 
-**Um aviso breve quando o Claude Code precisar de você. Uma fila para quando você puder voltar.**
+**A brief notification when Claude Code needs you. A queue for when you can return.**
 
-Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompanha sessões locais do Claude Code, inclusive dentro do VS Code, e avisa sobre perguntas, autorizações, respostas concluídas e erros. O aviso conta **três segundos** e não solicita o foco da digitação. Com o mouse sobre ele, permanece visível para leitura; ao retirar o mouse depois do prazo, fecha imediatamente.
+A local **Windows 10/11 x64** app built with C# / .NET 10 and WPF. It follows local Claude Code sessions, including those inside VS Code, and notifies you about questions, permissions, completed responses, and errors. Each notification counts down **three seconds** without taking keyboard focus. Keep the pointer over it to read; moving the pointer away after the deadline closes it immediately.
 
-**Versão 1.6.0 · tema Claro · seis idiomas.** A marca é CodePing nos seis idiomas. Consulte o [histórico de versões](CHANGELOG.md) e a [organização visual aprovada](design/NAVEGACAO.md).
+**Version 1.6.0 · Claro light theme · six languages.** The brand is CodePing in all six languages. See the [changelog](CHANGELOG.md) and the [approved visual organization](design/NAVEGACAO.md).
 
-![Sessões e perfis com personalização aberta no tema Claro](docs/images/painel-claro.png)
+![Sessions and profiles with customization expanded in the Claro theme](docs/images/painel-claro.png)
 
-*Capturas da aplicação real com dados fictícios de teste.*
+*Screenshots of the actual app in Portuguese, using fictional test data. The interface supports all six languages listed above.*
 
-## Funcionalidades
+## Features
 
-| Recurso | O que você pode fazer |
+| Feature | What you can do |
 | --- | --- |
-| **Vários projetos e conversas** | Acompanhar sessões simultâneas, com identificação por projeto e conversa. |
-| **Alertas de ação e conclusão** | Receber avisos de perguntas, autorizações, planos aguardando aprovação, solicitações de entrada, respostas concluídas e erros. |
-| **Aviso breve com leitura pelo mouse** | Ver um popup de três segundos sem perder o foco; mantê-lo aberto passando o mouse sobre ele. |
-| **Som e popup independentes** | Escolher os canais globais de aviso e personalizar o som por perfil. |
-| **Fila persistente** | Consultar solicitações ainda pendentes, inclusive depois de reiniciar o programa. |
-| **Adiamento individual** | Adiar cada solicitação por 5, 15 ou 30 minutos; no popup, adiar por 15 minutos. |
-| **Lembretes limitados** | Usar repetição progressiva, intervalo fixo ou nenhuma repetição automática. |
-| **Perfis visíveis** | Alternar entre Normal, Ocupado e Silencioso, com as opções de cada perfil sempre abertas. |
-| **Retomada e resumo** | Programar o retorno ao Normal ou usar Voltei e consultar o que aconteceu durante sua ausência. |
-| **Nomes reconhecíveis** | Usar o título personalizado recebido do Claude ou escolher um apelido local para cada conversa e projeto. |
-| **Regras por projeto** | Fixar, silenciar, escolher categorias e ajustar lembretes sem alterar os demais projetos. |
-| **Histórico local** | Consultar respostas confirmadas, conclusões, erros e encerramentos, com retenção de 24 horas e até 500 atividades. |
-| **Retorno ao editor** | Abrir a pasta do projeto no VS Code ou tentar restaurar sua janela existente. |
-| **Bandeja do Windows** | Manter o monitor em segundo plano, abrir o painel, testar avisos e silenciar temporariamente. |
-| **Seis idiomas** | Trocar imediatamente entre português, inglês, espanhol, alemão, francês e chinês simplificado. |
-| **Diagnóstico** | Verificar integração, executável, escrita da fila e horário do último evento recebido. |
-| **Uso local e acessível** | Usar navegação por teclado, foco visível e ajustes de alto contraste, sem enviar dados para serviços de rede. |
-| **Identidade e atualização compatível** | Usar a logo CodePing, manter configurações anteriores e conservar somente a release local atual pelo empacotamento. |
+| **Multiple projects and conversations** | Follow concurrent sessions, identified by project and conversation. |
+| **Action and completion alerts** | Receive notifications for questions, permissions, plans awaiting approval, requests for input, completed responses, and errors. |
+| **Brief notifications with hover reading** | See a three-second popup without losing focus; keep it open by hovering over it. |
+| **Independent sound and popup controls** | Choose global notification channels and customize sound per profile. |
+| **Persistent queue** | Review requests that still need attention, including after restarting the app. |
+| **Per-request deferral** | Defer each request for 5, 15, or 30 minutes; defer for 15 minutes from the popup. |
+| **Bounded reminders** | Use progressive reminders, a fixed interval, or no automatic repeats. |
+| **Visible profiles** | Switch between Normal, Busy, and Silent, with each profile's options always expanded. |
+| **Resume and catch up** | Schedule a return to Normal or use I'm back and review what happened while you were away. |
+| **Recognizable names** | Use the custom title received from Claude or choose a local nickname for each conversation and project. |
+| **Per-project rules** | Pin, mute, choose categories, and adjust reminders without changing other projects. |
+| **Local history** | Review answered requests, completed responses, errors, and session endings, retained for 24 hours with up to 500 activities. |
+| **Return to the editor** | Open the project folder in VS Code or try to restore its existing window. |
+| **Windows system tray** | Keep monitoring in the background, open the dashboard, test notifications, and mute temporarily. |
+| **Six languages** | Switch immediately between Portuguese, English, Spanish, German, French, and Simplified Chinese. |
+| **Diagnostics** | Check the integration, executable, queue writes, and the time of the last received event. |
+| **Local and accessible** | Use keyboard navigation, visible focus, and high-contrast adjustments without sending data to network services. |
+| **Branding and compatible upgrades** | Use the CodePing logo, keep existing settings, and retain only the current local release through packaging. |
 
-## Quais situações geram avisos
+## What triggers notifications
 
-| Situação | Aviso ou comportamento |
+| Situation | Notification or behavior |
 | --- | --- |
-| Claude pede permissão para uma ferramenta | **Autorização necessária**. |
-| Claude usa AskUserQuestion | **Claude fez uma pergunta**. |
-| Claude envia um plano para aprovação com ExitPlanMode | **Plano aguardando aprovação**. |
-| Integração pede uma resposta, inclusive via notificações de entrada/MCP | **Resposta necessária**, quando o evento correspondente é recebido. |
-| Claude encerra uma resposta | **Resposta concluída**. Isso não comprova que a tarefa inteira terminou. |
-| Claude emite StopFailure | **Claude interrompido por erro**. |
-| Sessão inicia, envia um novo prompt ou usa ferramentas comuns | Atualiza o estado da sessão; não gera um popup para cada atividade. |
-| Sessão encerra | Retira suas pendências e registra o encerramento no histórico. |
+| Claude requests permission for a tool | **Permission required**. |
+| Claude uses AskUserQuestion | **Claude has a question**. |
+| Claude submits a plan for approval with ExitPlanMode | **Plan awaiting approval**. |
+| An integration requests a reply, including input/MCP notifications | **Response required**, when the corresponding event is received. |
+| Claude finishes a response | **Response complete**. This does not prove that the entire task is finished. |
+| Claude emits StopFailure | **Claude stopped due to an error**. |
+| A session starts, submits a new prompt, or uses ordinary tools | Updates the session state; does not show a popup for every activity. |
+| A session ends | Removes its pending requests and records the session ending in history. |
 
-Os avisos dependem das preferências globais, do perfil e das regras do projeto. O CodePing acompanha eventos do Claude Code; a inatividade do VS Code, por si só, não dispara um aviso.
+Notifications depend on global preferences, the profile, and project rules. CodePing follows Claude Code events; VS Code inactivity alone does not trigger a notification.
 
-## Baixar e executar
+## Download and run
 
-1. Abra a [versão mais recente](https://github.com/victorcqueiroz/CodePing/releases/latest) e baixe `CodePing-1.6.0-win-x64.zip`.
-2. Extraia **todos os arquivos** para uma pasta definitiva e abra `CodePing.exe`.
-3. Abra **Preferências → Ativar integração**. Se já estiver configurada, a ação aparece como **Atualizar integração**.
-4. Abra uma nova conversa do Claude Code no VS Code para carregar a configuração.
-5. Use **Preferências → Testar aviso**. Você pode fechar o painel e deixá-lo na bandeja.
+1. Open the [latest release](https://github.com/victorcqueiroz/CodePing/releases/latest) and download `CodePing-1.6.0-win-x64.zip`.
+2. Extract **all files** to a permanent folder and open `CodePing.exe`.
+3. Open **Preferences → Enable integration**. If already configured, the action appears as **Refresh integration**.
+4. Open a new Claude Code conversation in VS Code to load the configuration.
+5. Use **Preferences → Test notification**. You can close the dashboard and leave the app in the system tray.
 
-O pacote inclui o runtime .NET; não é necessário instalar o SDK para usar. Requer Claude Code local com hooks de comando que aceitem `command`, `args` e `onFailure` (integração originalmente validada com Claude Code 2.1.312). O botão de retorno requer VS Code. O executável não tem assinatura digital comercial.
+The package includes the .NET runtime; you do not need the SDK to use it. It requires local Claude Code with command hooks that accept `command`, `args`, and `onFailure` (integration originally validated with Claude Code 2.1.312). The return button requires VS Code. The executable does not have a commercial code-signing certificate.
 
-O arquivo `SHA256SUMS.txt` da publicação permite conferir o ZIP:
+Use the release's `SHA256SUMS.txt` to verify the ZIP:
 
 ```powershell
 Get-FileHash .\CodePing-1.6.0-win-x64.zip -Algorithm SHA256
 ```
 
-Mantenha os arquivos do pacote juntos. Os hooks guardam o caminho do executável; se mudar de pasta, atualize a integração na nova localização.
+Keep the package files together. Hooks store the executable's path; if you move the folder, refresh the integration from the new location.
 
-### Avisos e funcionamento na bandeja
+### Notifications and the system tray
 
-Em **Preferências**, som e popup podem ser ligados ou desligados separadamente. O som também depende da opção do perfil; Silencioso bloqueia ambos. Desligar avisos não interrompe a coleta de eventos nem apaga as pendências.
+In **Preferences**, sound and popups can be enabled or disabled separately. Sound also depends on the profile setting; Silent blocks both. Disabling notifications does not stop event collection or erase pending requests.
 
-O popup aparece no canto inferior direito da área útil do monitor onde está o ponteiro, permanece sobre outras janelas e não solicita o foco da digitação. Mostra projeto, conversa, estado e contagem regressiva. Use **Abrir VS Code** para voltar ao projeto; solicitações pendentes oferecem também **Adiar 15 min**. O menu de contexto do aviso permite silenciar por cinco minutos.
+The popup appears in the bottom-right corner of the working area of the monitor containing the pointer, stays above other windows, and does not take keyboard focus. It shows the project, conversation, status, and countdown. Use **Open VS Code** to return to the project; pending requests also offer **Defer 15 min**. The notification's context menu lets you mute for five minutes.
 
-Os três segundos continuam correndo com o mouse sobre o aviso. Se o prazo vencer durante a leitura, ele mostra **Em leitura** e permanece aberto. Ao retirar o mouse depois do prazo, fecha imediatamente; sair antes usa somente o tempo restante.
+The three seconds keep counting while the pointer is over the notification. If the deadline expires while you are reading, it displays **Reading** and stays open. Moving the pointer away after the deadline closes it immediately; leaving earlier uses only the remaining time.
 
-Fechar ou minimizar o painel o recolhe na bandeja e mantém o monitor funcionando. Dê duplo clique no ícone para abrir novamente. O menu da bandeja permite abrir o painel, testar um aviso, silenciar por cinco minutos, voltar ao Normal, desativar a integração e sair. Uma segunda abertura do executável reaproveita a instância existente.
+Closing or minimizing the dashboard sends it to the system tray and keeps monitoring active. Double-click the icon to reopen it. The tray menu lets you open the dashboard, test a notification, mute for five minutes, return to Normal, disable the integration, and exit. Launching the executable a second time reuses the existing instance.
 
-Se a integração estiver ativa, um próximo evento do Claude pode iniciar o monitor novamente após **Sair**. Isso não equivale a um registro de inicialização automática no login do Windows.
+If the integration is active, a subsequent Claude event can start the monitor again after **Exit**. This is not registration for automatic startup at Windows login.
 
-## Marca e compatibilidade
+## Branding and compatibility
 
-CodePing é o novo nome do antigo Claude Alert / Claude Alerta. A logo combina um símbolo de código com um ponto de notificação; o azul acompanha o tema Claro, e o verde identifica o ping.
+CodePing is the new name of the former Claude Alert / Claude Alerta. The logo combines a code symbol with a notification dot; blue matches the existing Claro theme, and green represents the ping.
 
-O pacote traz **CodePing.exe** como executável principal. `ClaudeAlerta.exe` é uma cópia do apphost **desta mesma versão**, para manter funcionando atalhos e hooks que já carregaram o caminho antigo. Ambos usam o mesmo monitor e os mesmos dados, sem iniciar duas instâncias. Atualize a integração para usar o nome novo.
+The package provides **CodePing.exe** as the main executable. `ClaudeAlerta.exe` is a copy of the apphost from **this same version**, keeping shortcuts and hooks that have already loaded the old path working. Both use the same monitor and data without starting two instances. Refresh the integration to use the new name.
 
-Os dados continuam em `%LOCALAPPDATA%\ClaudeAlerta`, preservando preferências, idiomas, perfis, apelidos, pendências e histórico. Na máquina de desenvolvimento, a pasta de instalação continua `release/ClaudeAlerta`; o arquivo principal agora é `CodePing.exe`. O endereço oficial do repositório é [victorcqueiroz/CodePing](https://github.com/victorcqueiroz/CodePing).
+Data remains in `%LOCALAPPDATA%\ClaudeAlerta`, preserving preferences, languages, profiles, nicknames, pending requests, and history. On the development machine, the installation folder remains `release/ClaudeAlerta`; the main file is now `CodePing.exe`. The official repository is [victorcqueiroz/CodePing](https://github.com/victorcqueiroz/CodePing).
 
-Os arquivos da marca estão em [Assets](Assets/README.md): SVG editável, PNG transparente e ICO com nove tamanhos. Para gerar novamente os PNGs e o ICO no Windows, use `scripts/brand-assets.ps1`.
+Brand assets are in [Assets](Assets/README.md): editable SVG, transparent PNG, and an ICO with nine sizes. To regenerate the PNGs and ICO on Windows, run `scripts/brand-assets.ps1`.
 
-## Navegação lateral
+## Sidebar navigation
 
-O painel abre em **Sessões**. Um único menu à esquerda dá acesso às cinco áreas:
+The dashboard opens on **Sessions**. A single menu on the left provides access to five areas:
 
-| Área | Conteúdo |
+| Area | Contents |
 | --- | --- |
-| **Pendências** | Fila de solicitações, contexto e adiamento individual. O número no menu indica quantas ainda aguardam ação. |
-| **Sessões** | Todas as sessões acompanhadas, resumo da ausência e perfis de avisos. |
-| **Histórico** | Respostas confirmadas, respostas concluídas, erros e encerramentos das últimas 24 horas. |
-| **Projetos** | Apelidos, fixação, silêncio e regras individuais. |
-| **Preferências** | Som, popup, lembretes, teste de aviso e diagnóstico da integração. |
+| **Pending** | Request queue, context, and individual deferral. The menu count shows how many requests still need action. |
+| **Sessions** | All monitored sessions, the absence summary, and notification profiles. |
+| **History** | Answered requests, completed responses, errors, and session endings from the last 24 hours. |
+| **Projects** | Nicknames, pinning, muting, and individual rules. |
+| **Preferences** | Sound, popups, reminders, test notifications, and integration diagnostics. |
 
-Os controles têm foco visível e semântica nativa para navegação por teclado. Em janelas menores, Sessões e Preferências usam rolagem vertical. Listas extensas de sessões têm altura limitada para manter os perfis acessíveis.
+Controls have visible focus and native keyboard navigation semantics. On smaller windows, Sessions and Preferences scroll vertically. Long session lists have a bounded height to keep profiles accessible.
 
-## Pendências: o que ainda precisa de você
+## Pending: what still needs you
 
-Cada solicitação tem sua própria linha, projeto, nome da conversa e ferramenta, quando disponível. Perguntas paralelas na mesma sessão permanecem separadas.
+Each request has its own row, project, conversation name, and tool when available. Parallel questions within the same session stay separate.
 
-![Fila de pendências com contexto e adiamento](docs/images/pendencias-claro.png)
+![Pending request queue with context and deferral](docs/images/pendencias-claro.png)
 
-- **Adiar lembrete:** escolha 5, 15 ou 30 minutos para a solicitação selecionada. O aviso também oferece **Adiar 15 min**.
-- **Abrir projeto no VS Code:** tenta restaurar a janela correspondente ao projeto ou abrir sua pasta. Não seleciona uma conversa específica.
+- **Defer reminder:** choose 5, 15, or 30 minutes for the selected request. The notification also offers **Defer 15 min**.
+- **Open project in VS Code:** tries to restore the matching project window or open its folder. It does not select a specific conversation.
 
-Fechar o aviso, abrir o editor ou adiar **não responde ao Claude nem resolve a pendência**. Uma confirmação correspondente retira a solicitação da fila. Encerrar a sessão também retira suas pendências, registrando o encerramento. Se houver dúvida na correspondência entre ferramentas paralelas, o aplicativo conserva a pendência para evitar ocultá-la por engano.
+Closing the notification, opening the editor, or deferring **does not answer Claude or resolve the request**. A corresponding confirmation removes the request from the queue. Ending the session also removes its pending requests and records the session ending. When parallel tool calls cannot be matched confidently, the app keeps the request pending to avoid hiding it by mistake.
 
-As pendências e os adiamentos sobrevivem ao reinício. Estados recuperados exibem **Restaurado · aguardando novo evento**, pois o último estado salvo não comprova que a sessão continua ativa. Os registros têm retenção de 24 horas; o histórico guarda até 500 atividades. Esse prazo também vale para solicitações antigas de uma sessão ainda aberta.
+Pending requests and deferrals survive restarts. Recovered states show **Restored · awaiting a new event**, since the last saved state does not prove that a session is still active. Records are retained for 24 hours; history holds up to 500 activities. This deadline also applies to old requests in a session that is still open.
 
-O antigo botão **Já vi** foi substituído pelo adiamento explícito, para que uma solicitação ainda sem resposta não perca seus lembretes indefinidamente.
+The former **Seen** acknowledgement button was replaced with explicit deferral so an unanswered request does not lose its reminders indefinitely.
 
-## Sessões: perfis e atividade
+## Sessions: profiles and activity
 
-**Suas sessões** aparece primeiro, incluindo sessões trabalhando e aguardando resposta. Logo abaixo ficam os três cartões de **Perfil de avisos**. Clique em qualquer parte do cartão para selecionar; o perfil ativo recebe destaque e a indicação **Em uso**.
+**Your sessions** comes first, including sessions that are working and those awaiting a reply. The three **Alert profile** cards sit directly below. Click anywhere on a card to select it; the active profile is highlighted and marked **In use**.
 
-As opções em **Avisos do perfil…** ficam sempre abertas e mudam imediatamente com a seleção. Não há menu nem expansor para personalizar autorizações/perguntas, conclusões, erros e som.
+The options under **Alerts for…** stay expanded and change immediately with the selection. No menu or expander is needed to customize permissions/questions, completions, errors, and sound.
 
-![Perfil Ocupado e suas opções visíveis](docs/images/perfil-ocupado.png)
+![Busy profile with its options visible](docs/images/perfil-ocupado.png)
 
-| Perfil | Comportamento padrão |
+| Profile | Default behavior |
 | --- | --- |
-| **Normal** | Permite perguntas, autorizações, conclusões e erros. |
-| **Ocupado** | Permite perguntas, autorizações e erros; guarda conclusões sem popup e desliga o som do perfil. |
-| **Silencioso** | Bloqueia todos os popups e sons; continua recebendo eventos e guardando a atividade. |
+| **Normal** | Allows questions, permissions, completions, and errors. |
+| **Busy** | Allows questions, permissions, and errors; stores completions without a popup and turns off the profile's sound. |
+| **Silent** | Blocks all popups and sounds; continues receiving events and storing activity. |
 
-Em Normal e Ocupado, você pode escolher as categorias permitidas e o som do perfil. O som também precisa estar ligado nas preferências globais. O modo Silencioso sempre bloqueia avisos, mesmo que um projeto esteja configurado para permiti-los.
+In Normal and Busy, you can choose allowed categories and profile sound. Sound must also be enabled in global preferences. Silent always blocks notifications, even if a project is configured to allow them.
 
-Em Ocupado ou Silencioso, escolha retomada **manual**, em **15 minutos**, **30 minutos** ou **1 hora**. O prazo fica salvo e é respeitado após reiniciar o programa. **Voltei** retoma Normal na tela Sessões, onde o resumo indica respostas concluídas e erros que ficaram sem aviso durante sua ausência. As solicitações continuam em Pendências. Alternar entre Ocupado e Silencioso preserva esse período; a retomada automática não abre o painel à força.
+In Busy or Silent, choose to resume **when you return**, in **15 minutes**, **30 minutes**, or **1 hour**. The deadline is saved and respected after restarting the app. **I'm back** returns to Normal on the Sessions page, where the summary shows completed responses and errors that went without notifications while you were away. Requests remain in Pending. Switching between Busy and Silent preserves that absence period; automatic resumption does not force the dashboard open.
 
-Em outras áreas, o atalho **Perfil: …** leva diretamente aos cartões em Sessões. A opção **Ver histórico** abre a atividade detalhada.
+In other areas, the **Profile: …** shortcut takes you directly to the cards in Sessions. **View history** opens the detailed activity log.
 
-No menu da bandeja, **Silenciar por 5 minutos** aplica Silencioso com retorno automático. O painel pode ser aberto com duplo clique no ícone.
+In the tray menu, **Mute for 5 minutes** applies Silent with an automatic return. Double-click the icon to open the dashboard.
 
-### Lembretes com limite
+### Bounded reminders
 
-Em **Preferências**, escolha a política global:
+In **Preferences**, choose the global policy:
 
-- **Progressivo:** primeiro lembrete após 2 minutos; os seguintes após intervalos de 5 e 15 minutos.
-- **Intervalo fixo:** 30 segundos, 1 minuto ou 2 minutos, preservando as opções da versão anterior.
-- **Sem lembrete:** desliga repetições automáticas.
+- **Progressive:** the first reminder after 2 minutes; subsequent reminders after intervals of 5 and 15 minutes.
+- **Fixed interval:** 30 seconds, 1 minute, or 2 minutes, preserving the previous version's options.
+- **No reminders:** disables automatic repeats.
 
-São **até três lembretes adicionais por solicitação**. Adiar reinicia esse limite e agenda o próximo lembrete para o prazo escolhido. Mesmo com repetições automáticas desativadas, um adiamento explícito agenda um único retorno. Perfil, regras do projeto e preferências de popup/som continuam sendo respeitados. Solicitações diferentes não abrem lembretes simultâneos; o monitor espaça esses lembretes em pelo menos dez segundos.
+There are **up to three additional reminders per request**. Deferring resets this limit and schedules the next reminder for the chosen deadline. Even with automatic repeats disabled, an explicit deferral schedules one return. Profile, project rules, and popup/sound preferences still apply. Reminders for different requests do not open simultaneously; the monitor spaces those reminders at least ten seconds apart.
 
-Respostas concluídas e erros recebem um aviso inicial quando permitido, sem repetições automáticas. O relógio do popup continua sendo de três segundos. Se o mouse estiver sobre o aviso ao vencer esse prazo, ele permanece visível e mostra **Em leitura**. Ao sair depois do prazo, fecha imediatamente. Entrar ou sair antes não pausa nem reinicia a contagem.
+Completed responses and errors receive an initial notification when allowed, without automatic repeats. The popup's clock remains three seconds. If the pointer is over it when the deadline expires, it stays visible and shows **Reading**. Moving away after the deadline closes it immediately. Entering or leaving earlier does not pause or restart the countdown.
 
-![Aviso que se recolhe automaticamente em três segundos](docs/images/aviso-claro.png)
+![Notification that automatically closes after three seconds](docs/images/aviso-claro.png)
 
-![Aviso mantido aberto para leitura com o mouse](docs/images/aviso-leitura.png)
+![Notification kept open for reading by hovering](docs/images/aviso-leitura.png)
 
-## Identificar projeto e conversa
+## Identifying projects and conversations
 
-O aviso destaca **o projeto**, mostra **a conversa** em linha própria e informa o estado: resposta concluída, autorização, pergunta ou erro. Fecha automaticamente após três segundos, respeitando a permanência do mouse para leitura, sem solicitar foco.
+The notification highlights **the project**, shows **the conversation** on its own line, and reports the status: completed response, permission, question, or error. It closes automatically after three seconds, respecting hover reading without taking focus.
 
-A identificação segue esta ordem:
+Identification uses this priority order:
 
-1. **Apelido local**, definido em **Nome da conversa**.
-2. **Título personalizado do Claude**, quando recebido pela integração.
-3. **ID curto da sessão**, quando nenhum nome está disponível.
+1. **Local nickname**, set through **Conversation name**.
+2. **Custom Claude title**, when received through the integration.
+3. **Short session ID**, when no name is available.
 
-Em **Sessões**, cada linha oferece **Nome da conversa**. Em **Pendências** e **Histórico**, a mesma ação fica no detalhe à direita. O editor mostra o projeto, o título recebido e o ID completo. Salve um apelido ou deixe o campo vazio para voltar ao título/ID. O apelido é exclusivo daquela sessão, mesmo quando várias conversas usam a mesma pasta ou têm nomes iguais; não renomeia a conversa no Claude Code.
+In **Sessions**, each row offers **Conversation name**. In **Pending** and **History**, the same action is in the details on the right. The editor shows the project, received title, and full ID. Save a nickname or leave the field empty to return to the title/ID. A nickname belongs only to that session, even when several conversations share a folder or title; it does not rename the conversation in Claude Code.
 
-A identificação aparece também nas listas de Projetos. Os nomes aceitam até 160 caracteres Unicode e são normalizados para uma linha. Nomes extensos são abreviados visualmente; passe o mouse para consultar o texto completo nas listas e no aviso.
+Identification also appears in project session lists. Names accept up to 160 Unicode characters and are normalized to one line. Long names are visually truncated; hover over them to read the full text in lists and notifications.
 
-A captura usa o campo opcional `session_title` de [SessionStart](https://code.claude.com/docs/en/hooks#sessionstart-input) e [UserPromptSubmit](https://code.claude.com/docs/en/hooks#userpromptsubmit-input). Depende de o Claude Code instalado fornecer esse campo. Um nome personalizado pode ser definido no Claude com `/rename`; a integração o recebe em um evento compatível seguinte. **Títulos gerados automaticamente não vêm nesse campo.** O aplicativo não lê a conversa ou a transcrição para tentar descobri-los. Eventos sem título preservam o último recebido; um título vazio explícito o limpa.
+Capture uses the optional `session_title` field in [SessionStart](https://code.claude.com/docs/en/hooks#sessionstart-input) and [UserPromptSubmit](https://code.claude.com/docs/en/hooks#userpromptsubmit-input). This depends on the installed Claude Code version supplying the field. You can set a custom name in Claude with `/rename`; the integration receives it on a subsequent compatible event. **Automatically generated titles are not included in that field.** The app does not read conversations or transcripts to discover them. Events without a title preserve the last one received; an explicitly empty title clears it.
 
-Títulos recebidos ficam no estado e nas atividades, inclusive após encerrar a sessão, respeitando as 24 horas de retenção. Apelidos escolhidos ficam nas preferências até serem removidos. Arquivos de versões anteriores continuam funcionando sem migração manual. **Abrir VS Code** continua abrindo o projeto, sem selecionar uma conversa específica.
+Received titles are stored in session state and activities, including after a session ends, within the 24-hour retention period. Chosen nicknames stay in preferences until removed. Files from earlier versions continue to work without manual migration. **Open VS Code** still opens the project without selecting a specific conversation.
 
-## Projetos: regras independentes
+## Projects: independent rules
 
-![Regras por projeto](docs/images/projetos-claro.png)
+![Per-project rules](docs/images/projetos-claro.png)
 
-Os projetos aparecem quando seus eventos chegam. Você pode:
+Projects appear as their events arrive. You can:
 
-- dar um apelido que aparece apenas no painel e nos avisos, sem renomear a pasta;
-- fixar os projetos mais usados no início;
-- silenciar um projeto sem afetar os demais;
-- permitir ou bloquear autorizações/perguntas, conclusões e erros;
-- herdar o intervalo global de lembretes ou escolher outro para aquele projeto;
-- consultar os nomes das conversas e os estados conhecidos das sessões.
+- choose a nickname shown only in the dashboard and notifications without renaming the folder;
+- pin frequently used projects at the top;
+- mute one project without affecting the others;
+- allow or block permissions/questions, completions, and errors;
+- inherit the global reminder interval or choose a different one for that project;
+- review conversation names and known session states.
 
-As regras de projeto **restringem** o perfil atual: um aviso precisa ser permitido em ambos. As pastas são comparadas sem diferenciar maiúsculas, minúsculas ou a barra final. Nomes iguais em pastas diferentes continuam sendo projetos distintos.
+Project rules **restrict** the active profile: a notification must be allowed by both. Folder comparisons ignore case and trailing slashes. Identical names in different folders remain separate projects.
 
-## Verificar a integração
+## Checking the integration
 
-Em **Preferências**, **Verificar integração** confere o executável, a presença dos handlers esperados na configuração do usuário e a possibilidade de escrever na fila local. A mesma área mostra separadamente a data do **último evento recebido**.
+In **Preferences**, **Check integration** checks the executable, the expected handlers in the user's configuration, and the ability to write to the local queue. The same area separately shows the time of the **last received event**.
 
-Uma configuração válida não comprova a entrega de novos eventos. O fluxo completo só é confirmado quando um evento real do Claude chega. Ausência de eventos não é tratada como travamento ou desconexão; uma resposta longa pode não produzir eventos durante algum tempo. Políticas, configurações de projeto e `disableAllHooks` podem afetar a execução dos hooks.
+A valid configuration does not prove that new events are being delivered. The full flow is confirmed only when an actual Claude event arrives. A lack of events is not treated as a hang or disconnection; a long response may produce no events for some time. Policies, project settings, and `disableAllHooks` can affect hook execution.
 
-## Idiomas
+## Languages
 
-No canto inferior direito, o seletor discreto oferece **Português, English, Español, Deutsch, Français e 简体中文**. A troca é imediata, inclui toda a navegação, os cartões, as opções dos perfis, os avisos e a bandeja, e fica salva para a próxima abertura. O idioma não altera o estado das pendências nem reinicia o prazo de um aviso aberto.
+The discreet selector in the bottom-right corner offers **Português, English, Español, Deutsch, Français, and 简体中文**. Switching is immediate, covers all navigation, cards, profile options, notifications, and the tray, and is saved for the next launch. Language changes do not alter pending request states or restart an open notification's deadline.
 
-Português é o padrão. As preferências da versão 1.2.0 preservam idioma, som, popup e intervalo de lembretes. Novas instalações começam com lembretes progressivos. Os catálogos ficam incorporados ao programa e não usam tradução pela rede.
+Portuguese is the default. Preferences from version 1.2.0 keep language, sound, popup, and reminder interval settings. New installations start with progressive reminders. Catalogs are embedded in the app and do not use online translation.
 
-## Dados locais e privacidade
+## Local data and privacy
 
-O programa usa os [hooks oficiais do Claude Code](https://code.claude.com/docs/en/hooks). Não tenta interpretar imagens da tela ou inferir atividade pelo consumo de CPU.
+The app uses [official Claude Code hooks](https://code.claude.com/docs/en/hooks). It does not interpret screen images or infer activity from CPU usage.
 
 ```mermaid
 flowchart LR
-    A[Claude Code] -->|JSON por stdin| B[Executável em modo hook]
-    B -->|Metadados filtrados| C[Fila local]
-    C --> D[Monitor na bandeja]
-    D --> E[Fila de pendências e histórico]
-    D --> F[Aviso de três segundos]
+    A[Claude Code] -->|JSON through stdin| B[Executable in hook mode]
+    B -->|Filtered metadata| C[Local queue]
+    C --> D[Tray monitor]
+    D --> E[Pending queue and history]
+    D --> F[Three-second notification]
 ```
 
-O mesmo executável recebe eventos rapidamente no modo hook e mantém o monitor, que consulta a fila a cada 500 ms. Eventos temporários são apagados após serem consumidos e salvos; eventos com mais de dez minutos são descartados. Eventos idênticos recentes são deduplicados, inclusive após reiniciar.
+The same executable quickly receives events in hook mode and runs the monitor, which polls the queue every 500 ms. Temporary events are deleted after being consumed and saved; events older than ten minutes are discarded. Recent identical events are deduplicated, including across restarts.
 
-Em `%LOCALAPPDATA%\ClaudeAlerta`:
+In `%LOCALAPPDATA%\ClaudeAlerta`:
 
-| Arquivo/pasta | Conteúdo |
+| File/folder | Contents |
 | --- | --- |
-| `preferences.json` | Idioma, som, popup, perfil, prazo de retorno, apelidos de projetos/conversas e regras por projeto. |
-| `activity.json` | Sessões, títulos personalizados, solicitações, adiamentos, IDs de ferramentas, histórico e horário do último evento. |
-| `inbox/` | Metadados temporários dos eventos. |
+| `preferences.json` | Language, sound, popups, profile, return deadline, project/conversation nicknames, and project rules. |
+| `activity.json` | Sessions, custom titles, requests, deferrals, tool IDs, history, and last event time. |
+| `inbox/` | Temporary event metadata. |
 
-São armazenados somente IDs de sessão/ferramenta, pasta do projeto, nomes de evento/ferramenta, tipo de notificação, títulos personalizados recebidos e horários, além dos estados derivados e das preferências escolhidas. **Prompts, respostas, comandos, conteúdo de arquivos, mensagens de notificação e transcrições são descartados antes da gravação.** O aplicativo não captura a tela, não aprova operações e não faz requisições de rede. As capturas de teste renderizam apenas as próprias janelas.
+Only session/tool IDs, project folder, event/tool names, notification type, received custom titles, and timestamps are stored, along with derived states and chosen preferences. **Prompts, responses, commands, file contents, notification messages, and transcripts are discarded before writing.** The app does not capture the screen, approve operations, or make network requests. Test screenshots render only the app's own windows.
 
-A gravação usa troca atômica de arquivo. Se um arquivo não puder ser restaurado, o painel informa o problema; antes de substituí-lo, conserva uma cópia `*.invalid-*.bak`. Esses backups de recuperação não entram na expiração automática de 24 horas. Se a gravação de atividade falhar, o evento fica na fila para nova tentativa e o painel informa a falha.
+Writes use atomic file replacement. If a file cannot be restored, the dashboard reports the problem; before replacing it, the app keeps a `*.invalid-*.bak` copy. Those recovery backups are not covered by automatic 24-hour expiration. If activity cannot be saved, the event remains in the queue for a retry and the dashboard reports the failure.
 
-A integração altera `~/.claude/settings.json`, preservando outras configurações e hooks e criando uma cópia `settings.json.claude-alerta-*.bak` antes da alteração. Para desativar, escolha **Desativar integração** na bandeja e depois **Sair**. Apenas sair permite que o próximo evento inicie o monitor novamente.
+The integration changes `~/.claude/settings.json`, preserving other settings and hooks and creating a `settings.json.claude-alerta-*.bak` copy before the change. To disable it, select **Disable integration** in the tray and then **Exit**. Exiting alone allows the next event to start the monitor again.
 
-## Comandos disponíveis
+## Available commands
 
-Execute na pasta extraída do aplicativo:
+Run these from the extracted app folder:
 
-| Comando | Ação |
+| Command | Action |
 | --- | --- |
-| `.\CodePing.exe` | Abre o painel ou solicita a abertura da instância já existente. |
-| `.\CodePing.exe --tray` | Inicia o monitor recolhido na bandeja. |
-| `.\CodePing.exe --install-hooks` | Instala ou atualiza a integração, preservando outras configurações e criando backup quando já há um arquivo. |
-| `.\CodePing.exe --remove-hooks` | Remove somente os handlers pertencentes ao aplicativo. |
-| `.\CodePing.exe --shutdown` | Solicita a saída do monitor em execução. |
+| `.\CodePing.exe` | Opens the dashboard or requests that the existing instance open. |
+| `.\CodePing.exe --tray` | Starts the monitor minimized to the system tray. |
+| `.\CodePing.exe --install-hooks` | Installs or updates the integration, preserving other settings and creating a backup when a file already exists. |
+| `.\CodePing.exe --remove-hooks` | Removes only the app's own handlers. |
+| `.\CodePing.exe --shutdown` | Requests that the running monitor exit. |
 
-Os scripts de teste usam modos de diagnóstico com armazenamento isolado; não é necessário usá-los para monitorar o Claude Code.
+Test scripts use diagnostic modes with isolated storage; you do not need them to monitor Claude Code.
 
-## Limitações
+## Limitations
 
-- Monitora sessões **locais** da conta Windows, inclusive no terminal; não é exclusivo da extensão do VS Code.
-- WSL, SSH, contêineres e sessões em nuvem precisam de uma ponte adicional, que este projeto não implementa. Codex não é monitorado.
-- `Stop` significa fim de uma resposta, não conclusão integral da tarefa. `idle_prompt` é um lembrete de ociosidade, não prova de processamento travado.
-- `PermissionRequest` não fornece `tool_use_id`. Quando não é possível correlacionar com segurança uma permissão paralela, ela fica pendente até uma confirmação inequívoca, o encerramento da sessão ou a expiração.
-- Eventos perdidos ou fora de ordem podem deixar um estado sem confirmação. Confira a conversa no Claude; o monitor não toma decisões no seu lugar.
-- O retorno ao VS Code não identifica a conversa exata. Jogos em tela cheia exclusiva podem encobrir o aviso.
-- Há um popup por vez; um novo aviso pode substituir o anterior, inclusive durante a leitura com o mouse. As solicitações continuam disponíveis na fila e os eventos de conclusão/erro no histórico.
-- A limpeza ocorre enquanto o monitor está aberto ou quando inicia novamente; não há um serviço de limpeza com o aplicativo encerrado.
+- Monitors **local** sessions under the Windows account, including terminal sessions; it is not exclusive to the VS Code extension.
+- WSL, SSH, containers, and cloud sessions need an additional bridge that this project does not implement. Codex is not monitored.
+- `Stop` means the end of a response, not the completion of an entire task. `idle_prompt` is an idle reminder, not proof that processing is stuck.
+- `PermissionRequest` does not supply `tool_use_id`. When a parallel permission request cannot be matched safely, it remains pending until an unambiguous confirmation, session ending, or expiration.
+- Lost or out-of-order events can leave a state unconfirmed. Check the conversation in Claude; the monitor does not make decisions for you.
+- Returning to VS Code does not identify the exact conversation. Games in exclusive fullscreen mode may cover the notification.
+- There is one popup at a time; a new notification may replace the previous one, even during hover reading. Requests remain in the queue, and completion/error events in history.
+- Cleanup runs while the monitor is open or when it starts again; there is no cleanup service while the app is closed.
 
-## Compilar, testar e empacotar
+## Build, test, and package
 
-Requer [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), Windows x64 e PowerShell 7:
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), Windows x64, and PowerShell 7:
 
 ```powershell
 git clone https://github.com/victorcqueiroz/CodePing.git
@@ -268,51 +270,55 @@ cd CodePing
 .\scripts\package.ps1 -SkipBuild
 ```
 
-A publicação fica em `artifacts/publish/win-x64/`; o ZIP e seu SHA-256 ficam em `artifacts/releases/1.6.0/`. Para usar outro SDK local, informe `-Dotnet C:\caminho\dotnet.exe` aos scripts de compilação, teste ou empacotamento.
+The published output is in `artifacts/publish/win-x64/`; the ZIP and its SHA-256 are in `artifacts/releases/1.6.0/`. To use another local SDK, pass `-Dotnet C:\caminho\dotnet.exe` to the build, test, or package script.
 
-### Manter somente a última release local
+### Keep only the latest local release
 
-O empacotamento conserva apenas o pacote da versão atual em `artifacts/releases/`. ZIPs de versões anteriores são removidos somente depois que o novo pacote e seu SHA-256 estiverem disponíveis e conferidos. Pastas com versões mais novas ou conteúdo não reconhecido são preservadas.
+Packaging retains only the current version's package in `artifacts/releases/`. ZIPs from older versions are removed only after the new package and its SHA-256 are available and verified. Folders containing newer versions or unrecognized content are preserved.
 
-Para limpar também distribuições antigas em `release/` e `artifacts/` de uma pasta de trabalho já existente:
+To also clean older distributions under `release/` and `artifacts/` in an existing workspace:
 
 ```powershell
 .\scripts\clean-releases.ps1 -LegacyRoot 'C:\caminho\da\pasta-de-trabalho' -WhatIf
 .\scripts\clean-releases.ps1 -LegacyRoot 'C:\caminho\da\pasta-de-trabalho'
 ```
 
-A limpeza exige um pacote atual válido. Ela só remove pastas antigas identificadas como CodePing ou Claude Alert, confere os caminhos e rejeita links/junções. A instalação sem sufixo `release/ClaudeAlerta`, os dados pessoais, outros projetos e o histórico no GitHub são preservados. Atualizações locais devem substituir a pasta única da instalação e descartar os binários antigos após a validação, sem manter backups de releases anteriores.
+Cleanup requires a valid current package. It only removes old folders identified as CodePing or Claude Alert, checks paths, and rejects links/junctions. The unsuffixed `release/ClaudeAlerta` installation, personal data, other projects, and GitHub history are preserved. Local upgrades should replace the single installation folder and discard old binaries after validation, without retaining backups of previous releases.
 
-Depois de compilar, execute `scripts/test-cleanup.ps1` para testar essa retenção em pastas isoladas, incluindo a preservação de outros projetos e a integração com o empacotamento.
+After building, run `scripts/test-cleanup.ps1` to test retention in isolated folders, including preservation of other projects and integration with packaging.
 
-Para somente compilar o executável pelo SDK:
+To publish the executable directly through the SDK:
 
 ```powershell
 dotnet publish .\ClaudeAlerta.csproj -c Release -r win-x64 --self-contained true -o .\artifacts\publish\win-x64
 ```
 
-Os testes usam armazenamento isolado em `artifacts/tests/`, preservando as configurações pessoais do Claude. `-Ui` exige uma sessão Windows com área de trabalho disponível e pode mostrar janelas brevemente. Os resultados, evidências e limites estão em [VALIDACAO.md](VALIDACAO.md).
+Tests use isolated storage in `artifacts/tests/`, preserving personal Claude settings. `-Ui` requires a Windows desktop session and may briefly show windows. Results, evidence, and limitations are in [VALIDACAO.md](VALIDACAO.md).
 
-Prefira `scripts/build.ps1` para preparar uma distribuição: ele cria uma publicação limpa, inclui documentação e arquivos da marca e gera o apphost de compatibilidade `ClaudeAlerta.exe`. A chamada direta ao SDK não executa essas etapas adicionais. Alterações apenas na documentação não exigem uma nova versão do executável ou substituição dos checksums de uma release já publicada.
+Prefer `scripts/build.ps1` when preparing a distribution: it creates a clean published output, includes documentation and brand assets, and generates the `ClaudeAlerta.exe` compatibility apphost. The direct SDK command does not perform those extra steps. Documentation-only changes do not require a new executable version or replacing an already published release's checksums.
 
-## Estrutura
+## Documentation in other languages
+
+All six READMEs cover the same features, instructions, and limitations. Use the language links at the top. The linked changelog, validation report, brand guide, and design documents remain in Portuguese.
+
+## Structure
 
 ```text
-Program.cs               Inicialização, bandeja e entrada dos hooks
-Core.cs                  Armazenamento, filtragem e instalação dos hooks
-MonitorModel.cs          Solicitações independentes, histórico e persistência
-Preferences.cs           Perfis, regras por projeto e política de lembretes
-Dashboard.xaml/.cs       Navegação lateral, sessões, perfis e diagnóstico
-AlertCard.xaml(.cs)       Aviso de três segundos e leitura com o mouse
-ConversationEditor.*     Editor de apelido local da conversa
-ConversationNames.cs     Normalização e limite dos nomes
-ClaroTheme.xaml          Tema Claro e estilos compartilhados
-Assets/                  Logo SVG/XAML, PNGs, ICO e guia da marca
-Localization.cs          Aplicação e fallback de idiomas
-Locales/                 Seis catálogos incorporados
-SelfTest.cs / UiCheck.cs  Testes isolados do monitor e da interface
-scripts/                 Compilação, testes e pacote versionado
-docs/images/             Capturas de demonstração
+Program.cs               Startup, tray, and hook entry point
+Core.cs                  Storage, filtering, and hook installation
+MonitorModel.cs          Independent requests, history, and persistence
+Preferences.cs           Profiles, project rules, and reminder policy
+Dashboard.xaml/.cs       Sidebar navigation, sessions, profiles, and diagnostics
+AlertCard.xaml(.cs)       Three-second notification and hover reading
+ConversationEditor.*     Local conversation nickname editor
+ConversationNames.cs     Name normalization and limits
+ClaroTheme.xaml          Claro theme and shared styles
+Assets/                  SVG/XAML logo, PNGs, ICO, and brand guide
+Localization.cs          Language application and fallback
+Locales/                 Six embedded catalogs
+SelfTest.cs / UiCheck.cs  Isolated monitor and interface tests
+scripts/                 Build, tests, and versioned packaging
+docs/images/             Demonstration screenshots
 ```
 
-Não há pacotes de terceiros declarados. A logo é um recurso próprio do projeto; os demais glifos e as fontes usam recursos de sistema do Windows.
+No third-party packages are declared. The logo is a project asset; other glyphs and fonts use Windows system resources.

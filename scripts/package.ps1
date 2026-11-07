@@ -13,10 +13,11 @@ $exe = Join-Path $publishFolder 'CodePing.exe'
 if (-not (Test-Path -LiteralPath $exe)) { throw 'Compile a publicação antes de empacotar.' }
 $binaryVersion = (Get-Item -LiteralPath $exe).VersionInfo.ProductVersion.Split('+')[0]
 if ($binaryVersion -ne $version) { throw "A publicação $binaryVersion não corresponde ao projeto $version." }
-foreach ($file in @('README.md', 'VALIDACAO.md', 'CHANGELOG.md')) {
+Get-ChildItem -LiteralPath $projectRoot -Filter 'README*.md' -File | Copy-Item -Destination $publishFolder -Force
+foreach ($file in @('VALIDACAO.md', 'CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination (Join-Path $publishFolder $file) -Force
 }
-Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $publishFolder 'LEIA-ME.md') -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'README.pt-BR.md') -Destination (Join-Path $publishFolder 'LEIA-ME.md') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $publishFolder -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'design') -Destination $publishFolder -Recurse -Force
 $outputFolder = Join-Path $projectRoot "artifacts\releases\$version"

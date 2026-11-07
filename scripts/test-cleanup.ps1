@@ -77,6 +77,8 @@ try {
     $actual = $sampleVersion.ToString()
     Write-Fixture (Join-Path $packageRepo 'ClaudeAlerta.csproj') "<Project><PropertyGroup><Version>$actual</Version></PropertyGroup></Project>"
     foreach ($name in @('README.md','VALIDACAO.md','CHANGELOG.md','docs\example.txt','design\example.txt')) { Write-Fixture (Join-Path $packageRepo $name) 'isolated packaging fixture' }
+    foreach ($name in @('README.pt-BR.md','README.es.md','README.de.md','README.fr.md','README.zh-Hans.md')) { Write-Fixture (Join-Path $packageRepo $name) 'translated README fixture' }
+    Write-Fixture (Join-Path $packageRepo 'README.pt-BR.md') 'Portuguese README fixture'
     $publish = Join-Path $packageRepo 'artifacts\publish\win-x64'
     [void][IO.Directory]::CreateDirectory($publish)
     Copy-Item -LiteralPath $sample -Destination (Join-Path $publish 'CodePing.exe')
@@ -88,6 +90,31 @@ try {
     $newSum = Join-Path (Split-Path -Parent $newZip) 'SHA256SUMS.txt'
     $expected = (Get-FileHash -LiteralPath $newZip).Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($newZip)
     Check ([IO.File]::ReadAllText($newSum).Trim() -ceq $expected) 'Pacote gerado mantém SHA-256 válido'
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [IO.Compression.ZipFile]::OpenRead($newZip)
+    try {
+        $names = @($archive.Entries.FullName)
+        Check (@('README.md','README.pt-BR.md','README.es.md','README.de.md','README.fr.md','README.zh-Hans.md').Where({ $_ -notin $names }).Count -eq 0) 'Pacote contém os seis READMEs referenciados pelos seletores'
+        $reader = [IO.StreamReader]::new($archive.GetEntry('LEIA-ME.md').Open())
+        try { Check ($reader.ReadToEnd() -ceq 'Portuguese README fixture') 'LEIA-ME do pacote continua em português' } finally { $reader.Dispose() }
+    } finally { $archive.Dispose() }
+    # Exercise the actual build script with only the external SDK boundary replaced.
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'build.ps1') -Destination (Join-Path $packageRepo 'scripts\build.ps1')
+    Write-Fixture (Join-Path $packageRepo 'Assets\example.svg') '<svg xmlns="http://www.w3.org/2000/svg" />'
+    Write-Fixture (Join-Path $publish 'ClaudeAlerta.dll') 'stale-library-fixture'
+    $fakeSdk = Join-Path $packageRepo 'fake-dotnet.ps1'
+    Write-Fixture $fakeSdk @'
+$outputIndex = [Array]::IndexOf($args, '-o')
+if ($outputIndex -lt 0) { throw 'Publish output argument missing' }
+$outputDirectory = $args[$outputIndex + 1]
+[void][IO.Directory]::CreateDirectory($outputDirectory)
+[IO.File]::WriteAllText((Join-Path $outputDirectory 'CodePing.exe'), 'apphost-fixture')
+$global:LASTEXITCODE = 0
+'@
+    & (Join-Path $packageRepo 'scripts\build.ps1') -Dotnet $fakeSdk | Out-Null
+    Check (@('README.md','README.pt-BR.md','README.es.md','README.de.md','README.fr.md','README.zh-Hans.md').Where({ -not (Test-Path -LiteralPath (Join-Path $publish $_)) }).Count -eq 0) 'Compilação distribui os seis READMEs'
+    Check ([IO.File]::ReadAllText((Join-Path $publish 'LEIA-ME.md')) -ceq 'Portuguese README fixture') 'Compilação preserva LEIA-ME em português'
+    Check (-not (Test-Path -LiteralPath (Join-Path $publish 'ClaudeAlerta.dll'))) 'Compilação não conserva biblioteca antiga na saída limpa'
     [IO.File]::WriteAllText((Join-Path $testBase 'cleanup-test-results.json'), (@{success=$true;checks=$checks} | ConvertTo-Json -Depth 5))
     Write-Host "$($checks.Count) verificações de retenção aprovadas."
 }

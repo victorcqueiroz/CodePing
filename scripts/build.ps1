@@ -23,8 +23,9 @@ Push-Location -LiteralPath $projectRoot
 try {
     & $Dotnet publish .\ClaudeAlerta.csproj -c $Configuration -r win-x64 --self-contained true -o $stageFolder
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish terminou com código $LASTEXITCODE." }
-    foreach ($file in @('README.md','VALIDACAO.md','CHANGELOG.md')) { Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $stageFolder }
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $stageFolder 'LEIA-ME.md')
+    Get-ChildItem -LiteralPath $projectRoot -Filter 'README*.md' -File | Copy-Item -Destination $stageFolder
+    foreach ($file in @('VALIDACAO.md','CHANGELOG.md')) { Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $stageFolder }
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'README.pt-BR.md') -Destination (Join-Path $stageFolder 'LEIA-ME.md')
     foreach ($folder in @('docs','design','Assets')) { Copy-Item -LiteralPath (Join-Path $projectRoot $folder) -Destination $stageFolder -Recurse -Force }
     # Current apphost keeps already-loaded hooks and shortcuts working under the former filename.
     Copy-Item -LiteralPath (Join-Path $stageFolder 'CodePing.exe') -Destination (Join-Path $stageFolder 'ClaudeAlerta.exe')

@@ -8,3 +8,4 @@
 
 - Nome atual: CodePing, executável principal CodePing.exe. ClaudeAlerta.exe é apphost de compatibilidade da mesma versão; manter os dois idênticos. Preservar mutex, marcador de hook, pasta de dados e caminho de instalação históricos. Nunca manter DLLs/runtimeconfigs antigos na publicação.
 - Repositório oficial: https://github.com/victorcqueiroz/CodePing. Usar este endereço nos remotes, links de documentação, downloads e futuras publicações.
+- README.md é a versão principal em inglês. Manter conteúdo equivalente em README.pt-BR.md, README.es.md, README.de.md, README.fr.md e README.zh-Hans.md, com seletor de idioma no topo. Capturas e documentos de apoio ainda em português devem ser identificados como tal. Os scripts incluem todos os READMEs nas futuras distribuições; LEIA-ME.md deve usar a versão portuguesa. Não substituir releases publicadas por alterações somente na documentação.

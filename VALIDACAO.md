@@ -1,4 +1,13 @@
-# Validação — 06/11/2026
+# Validação — 07/11/2026
+
+## Documentação multilíngue — 07/11/2026
+
+- README principal em inglês e versões completas em português, espanhol, alemão, francês e chinês simplificado, com navegação recíproca no topo.
+- Verificadas as mesmas 21 seções, 54 linhas de tabelas, sete imagens, quatro exemplos PowerShell e todos os trechos de código nas seis versões. Os rótulos de interface foram comparados aos respectivos catálogos incorporados.
+- **96 referências locais** conferidas, incluindo seletores de idioma, capturas e documentos de apoio. As traduções identificam que as capturas e os documentos vinculados permanecem em português.
+- **20 verificações de retenção/distribuição** aprovadas por `scripts/test-cleanup.ps1`. Incluem os seis READMEs no ZIP e na saída de compilação, LEIA-ME em português e substituição da saída antiga sem conservar uma biblioteca anterior. O teste de compilação usa o script real com apenas a fronteira do SDK substituída por uma fixture.
+- Testes isolados não alteraram a release existente. O aplicativo continua na versão 1.6.0 e o SHA-256 do ZIP publicado permanece `eda98b10ea8b06be91bda7a41a500ec3950c232d985d8645980d27710ed53ec0`.
+- Nas futuras distribuições, os scripts copiam todos os arquivos README e usam README.pt-BR.md como origem de LEIA-ME.md. Os relatórios locais ficam em `artifacts/cleanup-test-results.json` e não são versionados.
 
 ## Versão 1.6.0 — CodePing e leitura com o mouse
 
