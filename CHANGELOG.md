@@ -1,5 +1,21 @@
 # Histórico de versões
 
+## 1.5.0 — 2026-11-06
+
+### Adicionado
+
+- Projeto em destaque e conversa em linha própria nas notificações de três segundos.
+- Identificação da conversa em Sessões, Pendências, Histórico e na lista de sessões de Projetos.
+- Captura opcional do título personalizado fornecido pelo Claude Code em `session_title` nos eventos SessionStart/UserPromptSubmit.
+- Ação **Nome da conversa** para definir um apelido local por ID de sessão. Remover o apelido restaura o título recebido ou o ID curto.
+- Editor acessível e mensagens nos seis idiomas; atualização do nome em avisos abertos sem reiniciar o prazo.
+
+### Compatibilidade
+
+- Preserva configurações, pendências, perfis, tema Claro e comportamento de abrir o projeto no VS Code.
+- Arquivos anteriores sem títulos ou apelidos continuam legíveis. Títulos seguem a retenção da atividade; apelidos locais ficam nas preferências até serem removidos.
+- Títulos automáticos não são fornecidos no campo de título personalizado. O programa usa ID como alternativa e não lê transcrições ou prompts para descobrir nomes.
+
 ## 1.4.0 — 2026-10-28
 
 ### Alterado

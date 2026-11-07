@@ -163,5 +163,13 @@
   "ViewHistory": "Voir l’historique",
   "ProfileSound": "Son du profil",
   "ReturnCompact": "De retour",
-  "ChooseProfile": "Choisir le profil d’alertes"
+  "ChooseProfile": "Choisir le profil d’alertes",
+  "ConversationLabel": "Conversation : {0}",
+  "NameConversation": "Nom de la conversation",
+  "ConversationNameHint": "Surnom utilisé uniquement dans Claude Alert. Laissez vide pour utiliser le titre Claude ou l’identifiant de session. 160 caractères maximum.",
+  "ClaudeConversationTitle": "Titre dans Claude : {0}",
+  "SessionIdentifier": "Identifiant de session : {0}",
+  "Cancel": "Annuler",
+  "ExampleConversation": "Ajuster l’enregistrement des caméras",
+  "ConversationTitleUnavailable": "Claude n’a pas encore fourni de titre personnalisé."
 }

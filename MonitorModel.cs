@@ -23,6 +23,7 @@ internal sealed class SessionState
     public SessionState(string id) => Id = id;
     public string Id { get; set; } = "";
     public string Folder { get; set; } = "";
+    public string Title { get; set; } = "";
     public string Status { get; set; } = "Conectado";
     public DateTimeOffset Last { get; set; }
     public bool Restored { get; set; }
@@ -32,7 +33,7 @@ internal sealed class SessionState
     [JsonIgnore] public string Project => string.IsNullOrEmpty(Folder) ? "Sessão Claude" : Path.GetFileName(Folder.TrimEnd('/', '\\'));
 }
 
-internal sealed record Activity(string Id, string SessionId, string Folder, string Status, DateTimeOffset At, bool Quiet = false);
+internal sealed record Activity(string Id, string SessionId, string Folder, string Status, DateTimeOffset At, bool Quiet = false, string Title = "");
 internal sealed record Notice(SessionState Session, string Status, string Category, PendingRequest? Request = null);
 internal sealed class MonitorSnapshot
 {
@@ -67,9 +68,14 @@ internal sealed class MonitorState
         if (Sessions.TryGetValue(e.Session, out var known) && e.At < known.Last) return false;
         processed.Add(key); if (processed.Count > 512) processed.RemoveAt(0);
         LastReceived = e.At > LastReceived ? e.At : LastReceived;
-        if (!Sessions.TryGetValue(e.Session, out var s)) Sessions[e.Session] = s = new(e.Session);
+        if (!Sessions.TryGetValue(e.Session, out var s))
+        {
+            var previous = History.Where(h => h.SessionId == e.Session && h.At <= e.At && h.At >= e.At.AddHours(-24)).MaxBy(h => h.At);
+            Sessions[e.Session] = s = new(e.Session) { Title = previous?.Title ?? "" };
+        }
         s.Last = e.At; s.Restored = false;
         if (!string.IsNullOrWhiteSpace(e.Folder)) s.Folder = e.Folder;
+        if (e.Title != null && e.Event is "SessionStart" or "UserPromptSubmit") s.Title = ConversationNames.Clean(e.Title);
         s.Tools.RemoveAll(t => e.At - t.At > TimeSpan.FromHours(8));
         if (e.Event == "SessionEnd")
         {
@@ -148,7 +154,7 @@ internal sealed class MonitorState
         foreach (var request in s.Requests.Where(predicate).ToArray())
         { s.Requests.Remove(request); AddHistory(s, "RequestAnswered", at); }
     }
-    void AddHistory(SessionState s, string status, DateTimeOffset at) => History.Add(new(Guid.NewGuid().ToString("N"), s.Id, s.Folder, status, at));
+    void AddHistory(SessionState s, string status, DateTimeOffset at) => History.Add(new(Guid.NewGuid().ToString("N"), s.Id, s.Folder, status, at, Title: s.Title));
     internal void MarkQuiet(Notice notice)
     {
         if (notice.Request != null) return;
@@ -180,8 +186,8 @@ internal sealed class MonitorState
                 s.Tools.Any(t => t == null || t.Tool == null || t.Id == null)) ||
                 snapshot.History.Any(h => h == null || h.Id == null || h.SessionId == null || h.Folder == null || h.Status == null)) throw new JsonException();
             foreach (var s in snapshot.Sessions.Where(s => !string.IsNullOrEmpty(s.Id)))
-            { s.Requests ??= []; s.Tools ??= []; s.Restored = true; state.Sessions[s.Id] = s; }
-            state.History.AddRange(snapshot.History); state.processed.AddRange(snapshot.Processed.TakeLast(512));
+            { s.Requests ??= []; s.Tools ??= []; s.Title = ConversationNames.Clean(s.Title); s.Restored = true; state.Sessions[s.Id] = s; }
+            state.History.AddRange(snapshot.History.Select(h => h with { Title = ConversationNames.Clean(h.Title) })); state.processed.AddRange(snapshot.Processed.TakeLast(512));
             state.LastReceived = snapshot.LastReceived; state.Prune(now);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)

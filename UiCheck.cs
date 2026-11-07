@@ -60,9 +60,32 @@ internal static class UiCheck
                     dashboard.Navigate("pending"); await Idle();
                     Check(dashboard.EmptyState.IsVisible && !dashboard.OpenCodeButton.IsEnabled, "Estado vazio sem ação inválida");
                     Check(dashboard.MonitorLabel.Text == L.T("MonitorActive"), "Configuração dos hooks reconhecida");
+                    dashboard.Receive(Event("sample-one", "SessionStart") with { Title = "Ajustar câmeras" }, false);
                     dashboard.Receive(Event("sample-one", "PermissionRequest", "Bash"), false);
                     dashboard.Receive(Event("sample-two", "UserPromptSubmit"), false); await Idle();
                     Check(dashboard.SessionsList.Items.Count == 1 && dashboard.DeferPanel.IsVisible, "Fila mostra somente solicitações pendentes");
+                    Check(((QueueRow)dashboard.SessionsList.Items[0]).SessionLabel.Contains("Ajustar câmeras"), "Pendência identifica a conversa pelo título recebido");
+                    void EditName(Button button, string text, bool cancel = false)
+                    {
+                        Exception? editorError = null; bool opened = false;
+                        dashboard.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+                        {
+                            var editor = app.Windows.OfType<ConversationEditor>().FirstOrDefault();
+                            try
+                            {
+                                Check(editor != null, "Ação de nome abre editor da conversa"); opened = true;
+                                editor!.ConversationAliasInput.Text = text;
+                                (cancel ? editor.CancelNameButton : editor.SaveNameButton).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                            }
+                            catch (Exception ex) { editorError = ex; editor?.Close(); }
+                        }));
+                        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        if (editorError != null) throw editorError;
+                        Check(opened, "Editor usa a sessão selecionada sem abrir outra janela do VS Code");
+                    }
+                    EditName(dashboard.NameConversationButton, "Gravação das câmeras");
+                    Check(dashboard.DetailSession.Text == "Conversa: Gravação das câmeras" && Preferences.Load().ConversationAliases["sample-one"] == "Gravação das câmeras", "Apelido salvo identifica pendência e persiste por sessão");
+                    Check(dashboard.SessionOverview.Items.Cast<QueueRow>().Single(r => r.Session.Id == "sample-two").SessionLabel == "Conversa: Sessão sample-two", "Conversa sem título continua identificada pelo ID");
                     var request = dashboard.Monitor.Pending.Single().Request;
                     dashboard.DeferSelect.SelectedIndex = 0; dashboard.DeferButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Check(dashboard.Monitor.Pending.Count() == 1 && request.DeferredUntil > DateTimeOffset.UtcNow.AddMinutes(4), "Adiar pela interface conserva a pendência");
@@ -70,6 +93,15 @@ internal static class UiCheck
                     Capture((FrameworkElement)dashboard.Content, "claro-pendencias.png");
                     dashboard.NavSessions.IsChecked = true; await Idle();
                     Check(dashboard.SessionOverview.Items.Count == 2 && !dashboard.DeferPanel.IsVisible, "Sessões reúne atividade e solicitações sem mostrar ações da fila");
+                    var nameButton = Descendants<Button>(dashboard.SessionOverview).First(b => b.DataContext is QueueRow r && r.Session.Id == "sample-one");
+                    Check(nameButton.IsVisible && nameButton.Content?.ToString() == "Nome da conversa", "Nome da conversa fica acessível em cada sessão");
+                    EditName(nameButton, "Não salvar", cancel: true);
+                    Check(Preferences.Load().ConversationAliases["sample-one"] == "Gravação das câmeras", "Cancelar edição conserva nome anterior");
+                    EditName(nameButton, "");
+                    Check(dashboard.SessionOverview.Items.Cast<QueueRow>().Single(r => r.Session.Id == "sample-one").SessionLabel == "Conversa: Ajustar câmeras", "Remover apelido restaura título recebido do Claude");
+                    await Idle();
+                    nameButton = Descendants<Button>(dashboard.SessionOverview).First(b => b.DataContext is QueueRow r && r.Session.Id == "sample-one");
+                    EditName(nameButton, "Gravação das câmeras");
                     var sessionBottom = dashboard.SessionOverviewSection.TranslatePoint(new Point(0, dashboard.SessionOverviewSection.ActualHeight), dashboard.OverviewContent);
                     var profileTop = dashboard.ProfileSection.TranslatePoint(new Point(), dashboard.OverviewContent);
                     Check(sessionBottom.Y < profileTop.Y, "Suas sessões fica acima dos perfis como no mockup aprovado");
@@ -80,6 +112,7 @@ internal static class UiCheck
                     dashboard.Receive(Event("sample-one", "PostToolUse", "Bash"), false);
                     dashboard.NavHistory.IsChecked = true; await Idle();
                     Check(dashboard.SessionsList.Items.Cast<QueueRow>().Any(r => r.Status == L.T("RequestAnswered")), "Resposta confirmada entra em Recentes");
+                    Check(dashboard.SessionsList.Items.Cast<QueueRow>().All(r => r.SessionLabel == "Conversa: Gravação das câmeras"), "Histórico usa a mesma identificação da conversa");
                     dashboard.Navigate("pending");
                     dashboard.Receive(Event("sample-one", "PreToolUse", "AskUserQuestion", "q1"), false);
                     dashboard.Receive(Event("sample-one", "PreToolUse", "AskUserQuestion", "q2"), false);
@@ -117,6 +150,7 @@ internal static class UiCheck
                     dashboard.ProjectsList.SelectedItem = dashboard.ProjectsList.Items.Cast<ProjectRow>().First(r => r.Rules.Folder.EndsWith("Meu projeto"));
                     dashboard.AliasInput.Text = "Projeto favorito"; dashboard.AliasSaveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Check(dashboard.ProjectTitle.Text == "Projeto favorito" && Preferences.Load().Projects.Values.Any(p => p.Alias == "Projeto favorito"), "Apelido é aplicado e persistido");
+                    Check(dashboard.ProjectSessions.Text.Contains("Conversa: Gravação das câmeras"), "Projetos também apresenta nome da conversa");
                     dashboard.ProjectPin.IsChecked = true;
                     Check(((ProjectRow)dashboard.ProjectsList.Items[0]).Rules.Pinned, "Projeto fixado vai ao início da lista");
                     dashboard.ProjectDone.IsChecked = false;
@@ -155,6 +189,17 @@ internal static class UiCheck
                         Capture((FrameworkElement)dashboard.Content, "idioma-" + language.Code + "-regras.png");
                         dashboard.Navigate("prefs"); await Idle();
                         Check(new CheckBoxAutomationPeer(dashboard.SoundToggle).GetName() == L.T("Sound"), "Preferências acessíveis: " + language.Code);
+                        var editor = new ConversationEditor(new("editor-long") { Folder = @"C:\Exemplo\Projeto", Title = new string('摄', 160) }, dashboard.Settings, _ => { }) { Owner = dashboard, ShowActivated = false };
+                        try
+                        {
+                            editor.Show(); await Idle();
+                            var saveOrigin = editor.SaveNameButton.TranslatePoint(new Point(), (FrameworkElement)editor.Content);
+                            Check(new TextBoxAutomationPeer(editor.ConversationAliasInput).GetName() == L.T("NameConversation") &&
+                                saveOrigin.Y + editor.SaveNameButton.ActualHeight <= ((FrameworkElement)editor.Content).ActualHeight + 1,
+                                "Editor traduzido e acessível com título longo: " + language.Code);
+                            Capture((FrameworkElement)editor.Content, "idioma-" + language.Code + "-nome-conversa.png");
+                        }
+                        finally { editor.Close(); }
                         dashboard.ReminderSelect.IsDropDownOpen = true; await Idle();
                         var popup = (System.Windows.Controls.Primitives.Popup)dashboard.ReminderSelect.Template.FindName("PART_Popup", dashboard.ReminderSelect);
                         Check(popup.IsOpen, "Menu de lembretes abre: " + language.Code);
@@ -172,6 +217,21 @@ internal static class UiCheck
                     Check(dismissal >= 2700 && dismissal < 4500 && dashboard.VisibleCard == null, "Aviso fecha em três segundos sem clique nem reinício do prazo");
                     dashboard.Receive(Event("sample-one", "PreToolUse", "ExitPlanMode", "plan"), false);
                     Check(dashboard.VisibleCard != null, "Evento de ação abre aviso no perfil normal");
+                    var realCard = dashboard.VisibleCard!; var realClosed = new TaskCompletionSource();
+                    var realWatch = Stopwatch.StartNew(); realCard.Closed += (_, _) => realClosed.TrySetResult();
+                    Check(realCard.ProjectLabel.Text == "Projeto favorito" && realCard.ConversationLabel.Text == "Gespräch: Gravação das câmeras", "Aviso real combina projeto e conversa da sessão correta");
+                    Check(realCard.ProjectLabel.FontSize > realCard.AlertTitle.FontSize && Grid.GetRow(realCard.ProjectLabel) < Grid.GetRow(realCard.ConversationLabel), "Projeto e conversa têm destaque antes do estado");
+                    dashboard.LanguageSelect.SelectedValue = "pt-BR";
+                    await Task.Delay(1400);
+                    EditName(dashboard.NameConversationButton, "Revisar gravação");
+                    Check(ReferenceEquals(realCard, dashboard.VisibleCard) && realCard.ConversationLabel.Text == "Conversa: Revisar gravação", "Editar nome atualiza aviso aberto sem recriá-lo");
+                    Capture((FrameworkElement)realCard.Content, "claro-aviso-identificado.png");
+                    await realClosed.Task.WaitAsync(TimeSpan.FromSeconds(4));
+                    Check(realWatch.Elapsed.TotalMilliseconds < 4500, "Atualizar nome não reinicia duração de três segundos");
+                    dashboard.Receive(Event("sample-one", "PreToolUse", "AskUserQuestion", "close-check"), false);
+                    Check(dashboard.VisibleCard != null, "Nova solicitação exibe sua identificação");
+                    dashboard.Receive(Event("sample-one", "PostToolUse", "AskUserQuestion", "close-check"), false);
+                    Check(dashboard.VisibleCard == null, "Resolver solicitação identificada fecha seu aviso");
                     dashboard.Receive(Event("sample-one", "PostToolUse", "ExitPlanMode", "plan"), false);
                     Check(dashboard.VisibleCard == null, "Confirmação correspondente fecha aviso antes do prazo");
                     dashboard.LanguageSelect.SelectedValue = "fr";
@@ -183,6 +243,7 @@ internal static class UiCheck
                         reopened.Show(); await Idle();
                         Check(reopened.LanguageSelect.SelectedValue?.ToString() == "fr" && reopened.Monitor.Pending.Count() == 2, "Reabertura restaura idioma e pendências");
                         Check(reopened.Monitor.Sessions.Values.All(s => s.Restored) && reopened.Settings.Projects.Values.Any(p => p.Pinned), "Reabertura identifica estado restaurado e recupera projetos");
+                        Check(reopened.Settings.ConversationName(reopened.Monitor.Sessions["sample-one"]) == "Revisar gravação" && reopened.Monitor.Sessions["sample-one"].Title == "Ajustar câmeras", "Reabertura conserva apelido e título original separadamente");
                         Check(reopened.Settings.Profile == "normal" && Preferences.Load().Profile == "normal", "Reabertura retoma e salva Normal quando o prazo venceu durante o fechamento");
                     }
                     finally { reopened.Quit(); }

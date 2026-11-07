@@ -163,5 +163,13 @@
   "ViewHistory": "Ver histórico",
   "ProfileSound": "Som do perfil",
   "ReturnCompact": "Voltei",
-  "ChooseProfile": "Escolher perfil de avisos"
+  "ChooseProfile": "Escolher perfil de avisos",
+  "ConversationLabel": "Conversa: {0}",
+  "NameConversation": "Nome da conversa",
+  "ConversationNameHint": "Apelido apenas no Claude Alert. Deixe vazio para usar o título do Claude ou o ID da sessão. Até 160 caracteres.",
+  "ClaudeConversationTitle": "Título no Claude: {0}",
+  "SessionIdentifier": "ID da sessão: {0}",
+  "Cancel": "Cancelar",
+  "ExampleConversation": "Ajustar gravação das câmeras",
+  "ConversationTitleUnavailable": "O Claude ainda não forneceu um título personalizado."
 }

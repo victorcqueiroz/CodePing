@@ -1,0 +1,14 @@
+<Window x:Class="ClaudeAlerta.ConversationEditor" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="{DynamicResource Loc.NameConversation}" Width="500" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+ ShowInTaskbar="False" Background="{DynamicResource Surface}" FontFamily="{DynamicResource UiFont}" FontSize="14" UseLayoutRounding="True">
+ <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="ClaroTheme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+ <Border Padding="24" Background="{DynamicResource Surface}"><StackPanel>
+  <TextBlock x:Name="EditorProject" Foreground="{DynamicResource Ink}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+  <TextBlock x:Name="OriginalTitle" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,10,0,0" />
+  <TextBlock x:Name="SessionIdentifier" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,18" />
+  <Label Target="{Binding ElementName=ConversationAliasInput}" Content="{DynamicResource Loc.NameConversation}" Foreground="{DynamicResource Ink}" Padding="0,0,0,8" />
+  <TextBox x:Name="ConversationAliasInput" Padding="10,9" MaxLength="320" BorderBrush="{DynamicResource Line}" Foreground="{DynamicResource Ink}" Background="{DynamicResource Surface}" AutomationProperties.Name="{DynamicResource Loc.NameConversation}" />
+  <TextBlock Text="{DynamicResource Loc.ConversationNameHint}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,9,0,20" />
+  <WrapPanel HorizontalAlignment="Right"><Button x:Name="CancelNameButton" Content="{DynamicResource Loc.Cancel}" IsCancel="True" Click="Cancel_Click" Margin="0,0,10,0" /><Button x:Name="SaveNameButton" Content="{DynamicResource Loc.SaveAlias}" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="Save_Click" /></WrapPanel>
+ </StackPanel></Border>
+</Window>

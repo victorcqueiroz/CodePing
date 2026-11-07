@@ -11,12 +11,13 @@ public partial class AlertCard : Window
     readonly Stopwatch elapsed = new();
     readonly Action open, acknowledge;
     readonly SessionState session;
-    readonly string? projectAlias;
+    readonly Preferences prefs;
+    readonly string status;
     internal string SessionId { get; }
-    internal AlertCard(SessionState session, Action open, Action acknowledge, Action snooze, string? projectAlias = null)
+    internal AlertCard(SessionState session, string status, Preferences prefs, Action open, Action acknowledge, Action snooze)
     {
         InitializeComponent(); UiTheme.ApplyAccessibility(Resources);
-        this.session = session; this.projectAlias = projectAlias; SessionId = session.Id; this.open = open; this.acknowledge = acknowledge;
+        this.session = session; this.status = status; this.prefs = prefs; SessionId = session.Id; this.open = open; this.acknowledge = acknowledge;
         RefreshLanguage();
         var context = new System.Windows.Controls.ContextMenu();
         var silence = new System.Windows.Controls.MenuItem();
@@ -43,10 +44,12 @@ public partial class AlertCard : Window
     internal void RefreshLanguage()
     {
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Current);
-        AlertTitle.Text = L.Status(session.Status); AlertTitle.ToolTip = AlertTitle.Text;
-        string project = SessionId == "demo" ? L.T("ExampleProject") : projectAlias ?? L.Project(session);
-        ProjectLabel.Text = project + " · " + L.F("SessionLabel", SessionId[..Math.Min(8, SessionId.Length)]); ProjectLabel.ToolTip = project;
-        DeferToastButton.Visibility = session.Status is "Resposta concluída" or "Claude interrompido por erro" || SessionId == "demo" ? Visibility.Collapsed : Visibility.Visible;
+        AlertTitle.Text = L.Status(status); AlertTitle.ToolTip = AlertTitle.Text;
+        ProjectLabel.Text = SessionId == "demo" ? L.T("ExampleProject") : prefs.ProjectName(session);
+        ProjectLabel.ToolTip = ProjectLabel.Text;
+        ConversationLabel.Text = L.F("ConversationLabel", SessionId == "demo" ? L.T("ExampleConversation") : prefs.ConversationName(session));
+        ConversationLabel.ToolTip = ConversationLabel.Text + "\n" + L.F("SessionIdentifier", SessionId);
+        DeferToastButton.Visibility = status is "Resposta concluída" or "Claude interrompido por erro" || SessionId == "demo" ? Visibility.Collapsed : Visibility.Visible;
         Countdown.Text = L.F("Seconds", Math.Max(1, Math.Ceiling(3 - elapsed.Elapsed.TotalSeconds)));
     }
     void Open_Click(object sender, RoutedEventArgs e) => open();

@@ -1,6 +1,17 @@
-# Validação — 28/10/2026
+# Validação — 06/11/2026
 
-## Manutenção local — retenção de releases
+## Versão 1.5.0 — identificação de projeto e conversa
+
+- Publicação Windows x64 com runtime incluído, sem novos pacotes de terceiros.
+- **94 verificações do monitor e dos catálogos** aprovadas. Incluem captura de título sem conteúdo privado, prioridade do apelido por ID, nomes iguais na mesma pasta, ausência e remoção explícita de título, eventos atrasados, compatibilidade com dados antigos, Unicode, retomada e histórico após encerramento.
+- **149 verificações WPF** aprovadas. Exercitam o editor modal pelas ações reais de Sessões/Pendências, salvar/cancelar/remover apelido, persistência, identificação em Histórico/Projetos e no aviso real, além das regressões de perfis, navegação e adiamento.
+- Editor renderizado nos seis idiomas com título longo, nome acessível do campo e botão Salvar dentro da janela. Avisos e listas foram inspecionados no tema Claro.
+- Aviso real mostra projeto e conversa antes do estado. Editar o nome atualiza a janela existente, sem recriá-la ou reiniciar o prazo. A duração continua aproximadamente três segundos e não solicita ativação.
+- Revisão independente encontrou perda do título ao retomar sessão encerrada sem novo título. O teste reproduziu a falha; a correção recupera a última identificação dentro das 24 horas e respeita a remoção explícita do título.
+- Evidências locais: `artifacts/tests/b05dc92be64d4904b104c14c95e55e2c/core/results.json` e `ui/results.json`; capturas de demonstração em `docs/images/`.
+- Os testes usam eventos fictícios e o protocolo real do executável. Não comprovam a disponibilidade de `session_title` em toda instalação do Claude Code. Títulos automáticos não vêm nesse campo; o fallback permanece disponível. Abrir VS Code continua levando ao projeto.
+
+## Manutenção local — retenção de releases (28/10/2026)
 
 - O empacotamento passa a chamar `scripts/clean-releases.ps1` após gerar o ZIP atual e conferir seu SHA-256. Nenhum binário do aplicativo ou formato de dados foi alterado; a release do aplicativo permanece 1.4.0.
 - **14 verificações de retenção** aprovadas em pastas isoladas por `scripts/test-cleanup.ps1`: checksum inválido impede exclusões; WhatIf não altera arquivos; apenas pacotes e executáveis antigos reconhecidos são removidos; instalação atual, versões mais novas, pastas desconhecidas e outros projetos são preservados; execução repetida é idempotente; empacotamento aciona a retenção e produz checksum válido.

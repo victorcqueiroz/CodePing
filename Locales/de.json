@@ -163,5 +163,13 @@
   "ViewHistory": "Verlauf öffnen",
   "ProfileSound": "Profilton",
   "ReturnCompact": "Zurück",
-  "ChooseProfile": "Hinweisprofil wählen"
+  "ChooseProfile": "Hinweisprofil wählen",
+  "ConversationLabel": "Gespräch: {0}",
+  "NameConversation": "Gesprächsname",
+  "ConversationNameHint": "Alias nur für Claude Alert. Leer lassen, um den Claude-Titel oder die Sitzungs-ID zu verwenden. Bis zu 160 Zeichen.",
+  "ClaudeConversationTitle": "Titel in Claude: {0}",
+  "SessionIdentifier": "Sitzungs-ID: {0}",
+  "Cancel": "Abbrechen",
+  "ExampleConversation": "Kameraaufzeichnung anpassen",
+  "ConversationTitleUnavailable": "Claude hat noch keinen benutzerdefinierten Titel übermittelt."
 }

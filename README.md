@@ -4,7 +4,7 @@
 
 Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompanha sessões locais do Claude Code, inclusive dentro do VS Code, e avisa sobre perguntas, autorizações, respostas concluídas e erros. O aviso dura **três segundos**, se recolhe automaticamente e não solicita o foco da digitação.
 
-**Versão 1.4.0 · tema Claro · seis idiomas.** Em português, o aplicativo se chama Claude Alerta. Consulte o [histórico de versões](CHANGELOG.md) e a [organização visual aprovada](design/NAVEGACAO.md).
+**Versão 1.5.0 · tema Claro · seis idiomas.** Em português, o aplicativo se chama Claude Alerta. Consulte o [histórico de versões](CHANGELOG.md) e a [organização visual aprovada](design/NAVEGACAO.md).
 
 ![Sessões e perfis com personalização aberta no tema Claro](docs/images/painel-claro.png)
 
@@ -12,7 +12,7 @@ Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompa
 
 ## Baixar e executar
 
-1. Abra a [versão mais recente](https://github.com/victorcqueiroz/Claude-Alert/releases/latest) e baixe `ClaudeAlert-1.4.0-win-x64.zip`.
+1. Abra a [versão mais recente](https://github.com/victorcqueiroz/Claude-Alert/releases/latest) e baixe `ClaudeAlert-1.5.0-win-x64.zip`.
 2. Extraia **todos os arquivos** para uma pasta definitiva e abra `ClaudeAlerta.exe`.
 3. Abra **Preferências → Ativar integração**. Se já estiver configurada, a ação aparece como **Atualizar integração**.
 4. Abra uma nova conversa do Claude Code no VS Code para carregar a configuração.
@@ -23,7 +23,7 @@ O pacote inclui o runtime .NET; não é necessário instalar o SDK para usar. Re
 O arquivo `SHA256SUMS.txt` da publicação permite conferir o ZIP:
 
 ```powershell
-Get-FileHash .\ClaudeAlert-1.4.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\ClaudeAlert-1.5.0-win-x64.zip -Algorithm SHA256
 ```
 
 Mantenha os arquivos do pacote juntos. Os hooks guardam o caminho do executável; se mudar de pasta, atualize a integração na nova localização.
@@ -44,7 +44,7 @@ Os controles têm foco visível e semântica nativa para navegação por teclado
 
 ## Pendências: o que ainda precisa de você
 
-Cada solicitação tem sua própria linha, projeto, ID de sessão e ferramenta, quando disponível. Perguntas paralelas na mesma sessão permanecem separadas.
+Cada solicitação tem sua própria linha, projeto, nome da conversa e ferramenta, quando disponível. Perguntas paralelas na mesma sessão permanecem separadas.
 
 ![Fila de pendências com contexto e adiamento](docs/images/pendencias-claro.png)
 
@@ -93,6 +93,24 @@ Respostas concluídas e erros recebem um aviso inicial quando permitido, sem rep
 
 ![Aviso que se recolhe automaticamente em três segundos](docs/images/aviso-claro.png)
 
+## Identificar projeto e conversa
+
+O aviso destaca **o projeto**, mostra **a conversa** em linha própria e informa o estado: resposta concluída, autorização, pergunta ou erro. Continua fechando automaticamente em três segundos, sem solicitar foco.
+
+A identificação segue esta ordem:
+
+1. **Apelido local**, definido em **Nome da conversa**.
+2. **Título personalizado do Claude**, quando recebido pela integração.
+3. **ID curto da sessão**, quando nenhum nome está disponível.
+
+Em **Sessões**, cada linha oferece **Nome da conversa**. Em **Pendências** e **Histórico**, a mesma ação fica no detalhe à direita. O editor mostra o projeto, o título recebido e o ID completo. Salve um apelido ou deixe o campo vazio para voltar ao título/ID. O apelido é exclusivo daquela sessão, mesmo quando várias conversas usam a mesma pasta ou têm nomes iguais; não renomeia a conversa no Claude Code.
+
+A identificação aparece também nas listas de Projetos. Os nomes aceitam até 160 caracteres Unicode e são normalizados para uma linha. Nomes extensos são abreviados visualmente; passe o mouse para consultar o texto completo nas listas e no aviso.
+
+A captura usa o campo opcional `session_title` de [SessionStart](https://code.claude.com/docs/en/hooks#sessionstart-input) e [UserPromptSubmit](https://code.claude.com/docs/en/hooks#userpromptsubmit-input). Depende de o Claude Code instalado fornecer esse campo. Um nome personalizado pode ser definido no Claude com `/rename`; a integração o recebe em um evento compatível seguinte. **Títulos gerados automaticamente não vêm nesse campo.** O aplicativo não lê a conversa ou a transcrição para tentar descobri-los. Eventos sem título preservam o último recebido; um título vazio explícito o limpa.
+
+Títulos recebidos ficam no estado e nas atividades, inclusive após encerrar a sessão, respeitando as 24 horas de retenção. Apelidos escolhidos ficam nas preferências até serem removidos. Arquivos de versões anteriores continuam funcionando sem migração manual. **Abrir VS Code** continua abrindo o projeto, sem selecionar uma conversa específica.
+
 ## Projetos: regras independentes
 
 ![Regras por projeto](docs/images/projetos-claro.png)
@@ -104,7 +122,7 @@ Os projetos aparecem quando seus eventos chegam. Você pode:
 - silenciar um projeto sem afetar os demais;
 - permitir ou bloquear autorizações/perguntas, conclusões e erros;
 - herdar o intervalo global de lembretes ou escolher outro para aquele projeto;
-- consultar os IDs e os estados conhecidos das sessões.
+- consultar os nomes das conversas e os estados conhecidos das sessões.
 
 As regras de projeto **restringem** o perfil atual: um aviso precisa ser permitido em ambos. As pastas são comparadas sem diferenciar maiúsculas, minúsculas ou a barra final. Nomes iguais em pastas diferentes continuam sendo projetos distintos.
 
@@ -139,11 +157,11 @@ Em `%LOCALAPPDATA%\ClaudeAlerta`:
 
 | Arquivo/pasta | Conteúdo |
 | --- | --- |
-| `preferences.json` | Idioma, som, popup, perfil, prazo de retorno, apelidos e regras por projeto. |
-| `activity.json` | Sessões, solicitações, adiamentos, IDs de ferramentas, histórico e horário do último evento. |
+| `preferences.json` | Idioma, som, popup, perfil, prazo de retorno, apelidos de projetos/conversas e regras por projeto. |
+| `activity.json` | Sessões, títulos personalizados, solicitações, adiamentos, IDs de ferramentas, histórico e horário do último evento. |
 | `inbox/` | Metadados temporários dos eventos. |
 
-São armazenados somente IDs de sessão/ferramenta, pasta do projeto, nomes de evento/ferramenta, tipo de notificação e horários, além dos estados derivados e das preferências escolhidas. **Prompts, respostas, comandos, conteúdo de arquivos, mensagens de notificação e transcrições são descartados antes da gravação.** O aplicativo não captura a tela, não aprova operações e não faz requisições de rede. As capturas de teste renderizam apenas as próprias janelas.
+São armazenados somente IDs de sessão/ferramenta, pasta do projeto, nomes de evento/ferramenta, tipo de notificação, títulos personalizados recebidos e horários, além dos estados derivados e das preferências escolhidas. **Prompts, respostas, comandos, conteúdo de arquivos, mensagens de notificação e transcrições são descartados antes da gravação.** O aplicativo não captura a tela, não aprova operações e não faz requisições de rede. As capturas de teste renderizam apenas as próprias janelas.
 
 A gravação usa troca atômica de arquivo. Se um arquivo não puder ser restaurado, o painel informa o problema; antes de substituí-lo, conserva uma cópia `*.invalid-*.bak`. Esses backups de recuperação não entram na expiração automática de 24 horas. Se a gravação de atividade falhar, o evento fica na fila para nova tentativa e o painel informa a falha.
 
@@ -171,7 +189,7 @@ cd Claude-Alert
 .\scripts\package.ps1 -SkipBuild
 ```
 
-A publicação fica em `artifacts/publish/win-x64/`; o ZIP e seu SHA-256 ficam em `artifacts/releases/1.4.0/`. Para usar outro SDK local, informe `-Dotnet C:\caminho\dotnet.exe` aos scripts de compilação, teste ou empacotamento.
+A publicação fica em `artifacts/publish/win-x64/`; o ZIP e seu SHA-256 ficam em `artifacts/releases/1.5.0/`. Para usar outro SDK local, informe `-Dotnet C:\caminho\dotnet.exe` aos scripts de compilação, teste ou empacotamento.
 
 ### Manter somente a última release local
 

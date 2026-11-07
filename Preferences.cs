@@ -35,6 +35,7 @@ internal sealed class Preferences
     public int ResumeMinutes { get; set; } = 30;
     public Dictionary<string, EventRules> Profiles { get; set; } = Defaults();
     public Dictionary<string, ProjectRules> Projects { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, string> ConversationAliases { get; set; } = new(StringComparer.Ordinal);
     internal bool LoadFailed;
     static Dictionary<string, EventRules> Defaults() => new()
     {
@@ -58,6 +59,17 @@ internal sealed class Preferences
         string? alias = Projects.GetValueOrDefault(ProjectKey(session.Folder))?.Alias;
         return string.IsNullOrWhiteSpace(alias) ? L.Project(session) : alias;
     }
+    internal string ConversationName(SessionState session)
+    {
+        string alias = ConversationNames.Clean(ConversationAliases.GetValueOrDefault(session.Id));
+        string title = ConversationNames.Clean(session.Title);
+        return alias.Length > 0 ? alias : title.Length > 0 ? title : L.F("SessionLabel", session.Id[..Math.Min(12, session.Id.Length)]);
+    }
+    internal void NameConversation(string id, string? alias)
+    {
+        string name = ConversationNames.Clean(alias);
+        if (name.Length == 0) ConversationAliases.Remove(id); else ConversationAliases[id] = name;
+    }
     internal void Normalize()
     {
         Language = L.Normalize(Language);
@@ -66,6 +78,8 @@ internal sealed class Preferences
         if (ResumeMinutes is not (0 or 5 or 15 or 30 or 60)) ResumeMinutes = 30;
         Profiles ??= Defaults(); foreach (var pair in Defaults()) if (!Profiles.TryGetValue(pair.Key, out var rule) || rule == null) Profiles[pair.Key] = pair.Value;
         Projects = new((Projects ?? []).Where(p => p.Value != null).ToDictionary(p => p.Key, p => p.Value), StringComparer.OrdinalIgnoreCase);
+        ConversationAliases = new((ConversationAliases ?? []).Where(p => !string.IsNullOrWhiteSpace(p.Key) && !string.IsNullOrWhiteSpace(p.Value))
+            .ToDictionary(p => p.Key, p => ConversationNames.Clean(p.Value)), StringComparer.Ordinal);
         foreach (var rule in Projects.Values) if (rule.ReminderSeconds is not (-2 or -1 or 0 or 30 or 60 or 120)) rule.ReminderSeconds = -2;
     }
     internal void SetProfile(string profile, int minutes, DateTimeOffset now)

@@ -22,7 +22,7 @@ internal static class Storage
 }
 
 internal sealed record Signal(string Session, string Folder, string Event, string Tool,
-    string ToolId, string Notification, DateTimeOffset At)
+    string ToolId, string Notification, DateTimeOffset At, string? Title = null)
 {
     internal static Signal Parse(string json)
     {
@@ -32,9 +32,13 @@ internal sealed record Signal(string Session, string Folder, string Event, strin
             ? (v.GetString() ?? "")[..Math.Min(v.GetString()!.Length, 2048)] : "";
         var session = Get("session_id");
         if (string.IsNullOrWhiteSpace(session)) throw new InvalidDataException("Evento sem sessão.");
-        // Deliberately discard prompts, tool_input, command lines, messages and transcripts.
+        string eventName = Get("hook_event_name");
+        string? title = eventName is "SessionStart" or "UserPromptSubmit" &&
+            root.TryGetProperty("session_title", out var t) && t.ValueKind == JsonValueKind.String
+            ? ConversationNames.Clean(t.GetString()) : null;
+        // Only optional title metadata is retained; never prompts, messages or transcripts.
         return new(session, Get("cwd"), Get("hook_event_name"), Get("tool_name"),
-            Get("tool_use_id"), Get("notification_type"), DateTimeOffset.UtcNow);
+            Get("tool_use_id"), Get("notification_type"), DateTimeOffset.UtcNow, title);
     }
     internal void Enqueue()
     {

@@ -20,7 +20,7 @@ internal sealed class QueueRow(SessionState session, Preferences prefs, PendingR
     public string Key => Request?.Id ?? Activity?.Id ?? Session.Id;
     public string Folder => Session.Folder;
     public string Project => prefs.ProjectName(Session);
-    public string SessionLabel => L.F("SessionLabel", Session.Id[..Math.Min(12, Session.Id.Length)]);
+    public string SessionLabel => L.F("ConversationLabel", prefs.ConversationName(Session));
     public string SessionDetails => SessionLabel + " · " + Time;
     public string Status => L.Status(Request?.Status ?? Activity?.Status ?? (Session.Pending ? Session.Requests[0].Status : Session.Status));
     public string AccessibilityLabel => Project + ", " + SessionLabel + ", " + Status;
@@ -120,7 +120,7 @@ public partial class Dashboard : Window
         tray.Text = L.T(state.Pending.Any() ? "TrayPending" : "AppTitle");
         LastEventLabel.Text = state.LastReceived == default ? L.T("NoEventYet") : L.F("LastEvent", state.LastReceived.ToLocalTime().ToString("g", L.Culture));
     }
-    void RenderAll() { RenderSessions(); RenderProfile(); RenderProjects(); RefreshStatus(); }
+    void RenderAll() { RenderSessions(); RenderProfile(); RenderProjects(); RefreshStatus(); card?.RefreshLanguage(); }
     internal void Navigate(string page)
     {
         if (page is not ("pending" or "sessions" or "history" or "projects" or "prefs")) return;
@@ -154,7 +154,7 @@ public partial class Dashboard : Window
     {
         string? selected = (SessionsList.SelectedItem as QueueRow)?.Key;
         List<QueueRow> rows = activePage == "history"
-            ? state.History.OrderByDescending(h => h.At).Select(h => new QueueRow(new(h.SessionId) { Folder = h.Folder, Last = h.At, Status = h.Status }, prefs, activity: h)).ToList()
+            ? state.History.OrderByDescending(h => h.At).Select(h => new QueueRow(new(h.SessionId) { Folder = h.Folder, Title = state.Sessions.GetValueOrDefault(h.SessionId)?.Title ?? h.Title, Last = h.At, Status = h.Status }, prefs, activity: h)).ToList()
             : state.Pending.OrderBy(p => p.Request.DeferredUntil > DateTimeOffset.UtcNow).ThenBy(p => p.Request.Created).Select(p => new QueueRow(p.Session, prefs, p.Request)).ToList();
         SessionsList.ItemsSource = rows; SessionsList.SelectedItem = rows.FirstOrDefault(r => r.Key == selected) ?? rows.FirstOrDefault();
         EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -175,6 +175,7 @@ public partial class Dashboard : Window
         DetailFolder.Text = row?.Folder ?? ""; DetailSession.Text = row?.SessionLabel ?? "";
         DetailTool.Text = row?.Request?.Tool is { Length: > 0 } tool ? L.F("ToolLabel", tool) : "";
         DetailWait.Text = row?.Time ?? ""; OpenCodeButton.IsEnabled = row != null;
+        NameConversationButton.IsEnabled = row != null;
         DeferPanel.Visibility = row?.Request != null ? Visibility.Visible : Visibility.Collapsed;
     }
     void RenderProfile()
@@ -232,7 +233,7 @@ public partial class Dashboard : Window
             ProjectAction.IsChecked = row?.Rules.Action ?? true; ProjectDone.IsChecked = row?.Rules.Done ?? true; ProjectError.IsChecked = row?.Rules.Error ?? true;
             ProjectReminder.SelectedIndex = Math.Max(0, Array.IndexOf(projectIntervals, row?.Rules.ReminderSeconds ?? -2));
             ProjectSessions.Text = row == null ? "" : string.Join(Environment.NewLine, state.Sessions.Values.Where(s => Preferences.ProjectKey(s.Folder) == row.Key)
-                .Select(s => L.F("SessionLabel", s.Id[..Math.Min(12, s.Id.Length)]) + " · " + L.Status(s.Pending ? s.Requests[0].Status : s.Status)));
+                .Select(s => L.F("ConversationLabel", prefs.ConversationName(s)) + " · " + L.Status(s.Pending ? s.Requests[0].Status : s.Status)));
         }
         finally { rendering = before; }
     }
@@ -290,8 +291,7 @@ public partial class Dashboard : Window
         if (sound && prefs.Sound && prefs.Profiles[prefs.Profile].Sound && !diagnostics) SystemSounds.Exclamation.Play();
         if (!prefs.Popup) return prefs.Sound && prefs.Profiles[prefs.Profile].Sound;
         CloseCard();
-        var display = new SessionState(notice.Session.Id) { Folder = notice.Session.Folder, Status = notice.Status, Last = notice.Session.Last };
-        var shown = new AlertCard(display, () => OpenCode(notice.Session), () => Defer(notice.Request, 15), Snooze, prefs.ProjectName(notice.Session));
+        var shown = new AlertCard(notice.Session, notice.Status, prefs, () => OpenCode(notice.Session), () => Defer(notice.Request, 15), Snooze);
         card = shown; cardRequest = notice.Request?.Id;
         shown.Closed += (_, _) => { if (ReferenceEquals(card, shown)) { card = null; cardRequest = null; } }; shown.Show(); return true;
     }
@@ -337,6 +337,16 @@ public partial class Dashboard : Window
     void Session_Selected(object sender, SelectionChangedEventArgs e) { if (ready) UpdateDetail(); }
     void Session_DoubleClick(object sender, MouseButtonEventArgs e) => OpenCode(SelectedRow?.Session);
     void Overview_DoubleClick(object sender, MouseButtonEventArgs e) => OpenCode((SessionOverview.SelectedItem as QueueRow)?.Session);
+    void NameConversation_Click(object sender, RoutedEventArgs e)
+    {
+        var session = (sender as FrameworkElement)?.DataContext is QueueRow row ? row.Session : SelectedRow?.Session;
+        if (session == null) return;
+        var editor = new ConversationEditor(session, prefs, name =>
+        {
+            prefs.NameConversation(session.Id, name); SavePrefs(); RenderAll();
+        }) { Owner = this };
+        editor.ShowDialog(); e.Handled = true;
+    }
     void Navigation_Checked(object sender, RoutedEventArgs e) { if (ready && !rendering && sender is RadioButton { Tag: string page, IsChecked: true }) Navigate(page); }
     void Profiles_Click(object sender, RoutedEventArgs e)
     {

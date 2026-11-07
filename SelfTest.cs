@@ -47,6 +47,46 @@ internal static class SelfTest
             Check(genericPermission.Pending.Count() == 1 && genericPermission.Pending.Single().Request.Tool == "Bash", "Metadados substituem aviso genérico sem duplicação");
             var safe = Signal.Parse("{\"session_id\":\"safe\",\"hook_event_name\":\"PermissionRequest\",\"tool_input\":{\"command\":\"SECRET-123\"},\"message\":\"SECRET-456\",\"transcript_path\":\"SECRET-789\"}");
             Check(!JsonSerializer.Serialize(safe).Contains("SECRET"), "Dados sensíveis descartados");
+            var namedHook = Signal.Parse("{\"session_id\":\"named\",\"hook_event_name\":\"UserPromptSubmit\",\"session_title\":\"Ajustar câmeras\",\"prompt\":\"SECRET-PROMPT\",\"transcript_path\":\"SECRET-TRANSCRIPT\"}");
+            var namedPayload = JsonSerializer.Serialize(namedHook);
+            Check(namedPayload.Contains("Ajustar") && !namedPayload.Contains("SECRET"), "Hook conserva título da conversa sem conteúdo privado");
+            var named = new MonitorState(); named.Apply(namedHook);
+            Check(JsonSerializer.Serialize(named.Sessions["named"]).Contains("Ajustar"), "Título recebido acompanha o estado da conversa");
+            Check(named.Sessions["named"].Title == "Ajustar câmeras", "Título não é derivado do conteúdo do prompt");
+            named.Apply(namedHook with { Event = "Stop", Title = null, At = namedHook.At.AddSeconds(1) });
+            Check(named.Sessions["named"].Title == "Ajustar câmeras" && named.History.Single().Title == "Ajustar câmeras", "Evento sem título preserva identificação e histórico");
+            named.Apply(namedHook with { Title = "Nova conversa", At = namedHook.At.AddSeconds(2) });
+            named.Apply(namedHook with { Title = "Título atrasado", At = namedHook.At.AddSeconds(1) });
+            Check(named.Sessions["named"].Title == "Nova conversa", "Título atrasado não substitui nome recente");
+            named.Apply(namedHook with { Session = "different", Title = "Nova conversa", At = namedHook.At.AddSeconds(3) });
+            var identity = new Preferences(); identity.NameConversation("named", "Minha tarefa");
+            Check(identity.ConversationName(named.Sessions["named"]) == "Minha tarefa" && identity.ConversationName(named.Sessions["different"]) == "Nova conversa", "Apelido é exclusivo por ID mesmo na mesma pasta e com títulos iguais");
+            identity.Save(); var savedIdentity = Preferences.Load();
+            Check(savedIdentity.ConversationName(named.Sessions["named"]) == "Minha tarefa", "Apelido da conversa sobrevive ao reinício");
+            savedIdentity.NameConversation("named", "  ");
+            Check(savedIdentity.ConversationName(named.Sessions["named"]) == "Nova conversa" && !savedIdentity.ConversationAliases.ContainsKey("named"), "Apagar apelido restaura título original");
+            named.Apply(namedHook with { Title = "", At = namedHook.At.AddSeconds(4) });
+            Check(named.Sessions["named"].Title == "" && savedIdentity.ConversationName(named.Sessions["named"]) == "Sessão named", "Título vazio explícito restaura identificação por ID");
+            named.Apply(namedHook with { Title = "Título recuperado", At = namedHook.At.AddSeconds(5) });
+            named.Save(DateTimeOffset.UtcNow); var namedRestored = MonitorState.Load(DateTimeOffset.UtcNow);
+            Check(namedRestored.Sessions["named"].Title == "Título recuperado" && namedRestored.History.Single().Title == "Ajustar câmeras", "Títulos de sessão e atividade são restaurados independentemente");
+            namedRestored.Apply(namedHook with { Event = "SessionEnd", Title = null, At = namedHook.At.AddSeconds(6) });
+            Check(!namedRestored.Sessions.ContainsKey("named") && namedRestored.History.Last().Title == "Título recuperado", "Encerramento conserva nome no histórico");
+            namedRestored.Apply(namedHook with { Event = "SessionStart", Title = null, At = namedHook.At.AddSeconds(7) });
+            Check(namedRestored.Sessions["named"].Title == "Título recuperado", "Retomar conversa sem título recupera nome do histórico recente");
+            namedRestored.Apply(namedHook with { Title = "", At = namedHook.At.AddSeconds(8) });
+            namedRestored.Apply(namedHook with { Event = "SessionEnd", Title = null, At = namedHook.At.AddSeconds(9) });
+            namedRestored.Apply(namedHook with { Event = "SessionStart", Title = null, At = namedHook.At.AddSeconds(10) });
+            Check(namedRestored.Sessions["named"].Title == "", "Retomar após remoção explícita não recupera título antigo");
+            Check(ConversationNames.Clean("  修复登录\r\n câmeras\t agora\u0000\u202E ") == "修复登录 câmeras agora", "Nome remove controles e preserva português e chinês em uma linha");
+            string longName = ConversationNames.Clean(string.Concat(Enumerable.Repeat("😀", 180)));
+            Check(longName.EnumerateRunes().Count() == 160 && !longName.Contains('\uFFFD'), "Nomes longos são limitados sem cortar pares Unicode");
+            Check(Signal.Parse("{\"session_id\":\"x\",\"hook_event_name\":\"Stop\",\"session_title\":\"Não usar\"}").Title == null,
+                "Campo fora dos eventos documentados não vira título");
+            Check(Signal.Parse("{\"session_id\":\"x\",\"hook_event_name\":\"SessionStart\",\"session_title\":42}").Title == null,
+                "Tipo inválido de título usa fallback");
+            var legacySnapshot = JsonSerializer.Deserialize<MonitorSnapshot>("{\"Sessions\":[{\"Id\":\"legacy\"}],\"History\":[{\"Id\":\"h\",\"SessionId\":\"legacy\",\"Folder\":\"C:\\\\old\",\"Status\":\"Resposta concluída\",\"At\":\"2026-11-06T12:00:00Z\"}]}")!;
+            Check(identity.ConversationName(legacySnapshot.Sessions[0]) == "Sessão legacy" && string.IsNullOrEmpty(legacySnapshot.History[0].Title), "Snapshots anteriores sem título continuam legíveis");
 
             var parallel = new MonitorState();
             parallel.Apply(Event("PreToolUse", "Bash", "a")); parallel.Apply(Event("PreToolUse", "Bash", "b"));

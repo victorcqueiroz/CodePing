@@ -163,5 +163,13 @@
   "ViewHistory": "查看历史",
   "ProfileSound": "模式声音",
   "ReturnCompact": "我回来了",
-  "ChooseProfile": "选择提醒模式"
+  "ChooseProfile": "选择提醒模式",
+  "ConversationLabel": "对话：{0}",
+  "NameConversation": "对话名称",
+  "ConversationNameHint": "此别名仅用于 Claude Alert。留空则使用 Claude 标题或会话 ID。最多 160 个字符。",
+  "ClaudeConversationTitle": "Claude 中的标题：{0}",
+  "SessionIdentifier": "会话 ID：{0}",
+  "Cancel": "取消",
+  "ExampleConversation": "调整摄像头录像",
+  "ConversationTitleUnavailable": "Claude 尚未提供自定义标题。"
 }

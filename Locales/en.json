@@ -163,5 +163,13 @@
   "ViewHistory": "View history",
   "ProfileSound": "Profile sound",
   "ReturnCompact": "I'm back",
-  "ChooseProfile": "Choose alert profile"
+  "ChooseProfile": "Choose alert profile",
+  "ConversationLabel": "Conversation: {0}",
+  "NameConversation": "Conversation name",
+  "ConversationNameHint": "Nickname for Claude Alert only. Leave blank to use the Claude title or session ID. Up to 160 characters.",
+  "ClaudeConversationTitle": "Title in Claude: {0}",
+  "SessionIdentifier": "Session ID: {0}",
+  "Cancel": "Cancel",
+  "ExampleConversation": "Adjust camera recording",
+  "ConversationTitleUnavailable": "Claude has not provided a custom title yet."
 }
