@@ -15,7 +15,7 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Informe a versão MAJOR.MINOR
 $keepVersion = [version]$Version
 $packagesRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts\releases'))
 $keepFolder = Join-Path $packagesRoot $Version
-$keepZip = Join-Path $keepFolder "ClaudeAlert-$Version-win-x64.zip"
+$keepZip = Join-Path $keepFolder "CodePing-$Version-win-x64.zip"
 $keepSum = Join-Path $keepFolder 'SHA256SUMS.txt'
 
 function Assert-ContainedDirectory([string]$Path, [string]$Root) {
@@ -52,7 +52,8 @@ if ([IO.File]::ReadAllText($keepSum).Trim() -cne $expected) { throw 'O SHA-256 d
 $targets = [Collections.Generic.List[object]]::new()
 foreach ($folder in Get-ChildItem -LiteralPath $packagesRoot -Directory -Force) {
     if ($folder.Name -notmatch '^\d+\.\d+\.\d+$' -or [version]$folder.Name -ge $keepVersion) { continue }
-    if (-not (Test-Path -LiteralPath (Join-Path $folder.FullName "ClaudeAlert-$($folder.Name)-win-x64.zip") -PathType Leaf)) { continue }
+    $recognized = @('CodePing','ClaudeAlert') | Where-Object { Test-Path -LiteralPath (Join-Path $folder.FullName "$_-$($folder.Name)-win-x64.zip") -PathType Leaf }
+    if (-not $recognized) { continue }
     $targets.Add([pscustomobject]@{Path=$folder.FullName;Root=$packagesRoot})
 }
 
@@ -63,14 +64,14 @@ if ($LegacyRoot) {
         $root = Join-Path $legacyBase $leaf
         if (-not (Test-Path -LiteralPath $root -PathType Container)) { continue }
         foreach ($folder in Get-ChildItem -LiteralPath $root -Directory -Force) {
-            if ($folder.Name -notmatch '^ClaudeAlerta-(?:backup-)?(?<release>\d+\.\d+\.\d+)(?:[-.].*)?$') { continue }
+            if ($folder.Name -notmatch '^(?:CodePing|ClaudeAlerta)-(?:backup-)?(?<release>\d+\.\d+\.\d+)(?:[-.].*)?$') { continue }
             if ([version]$Matches.release -ge $keepVersion) { continue }
             $candidate = Assert-ContainedDirectory $folder.FullName $root
-            $exe = Join-Path $candidate 'ClaudeAlerta.exe'
-            if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { continue }
+            $exe = @('CodePing.exe','ClaudeAlerta.exe') | ForEach-Object { Join-Path $candidate $_ } | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+            if (-not $exe) { continue }
             $info = (Get-Item -LiteralPath $exe).VersionInfo
             $binaryVersion = $null
-            if ($info.ProductName -ne 'ClaudeAlerta' -or -not [version]::TryParse(($info.ProductVersion -split '\+')[0], [ref]$binaryVersion) -or $binaryVersion -ge $keepVersion) { continue }
+            if ($info.ProductName -notin @('ClaudeAlerta','CodePing') -or -not [version]::TryParse(($info.ProductVersion -split '\+')[0], [ref]$binaryVersion) -or $binaryVersion -ge $keepVersion) { continue }
             $targets.Add([pscustomobject]@{Path=$candidate;Root=$root})
         }
     }

@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$executable = Join-Path $projectRoot 'artifacts\publish\win-x64\ClaudeAlerta.exe'
+$executable = Join-Path $projectRoot 'artifacts\publish\win-x64\CodePing.exe'
 $testRoot = Join-Path $projectRoot ('artifacts\tests\' + [guid]::NewGuid().ToString('N'))
 $previousData = [Environment]::GetEnvironmentVariable('CLAUDE_ALERT_DATA', 'Process')
 $previousSettings = [Environment]::GetEnvironmentVariable('CLAUDE_ALERT_SETTINGS', 'Process')

@@ -1,5 +1,17 @@
 # Validação — 06/11/2026
 
+## Versão 1.6.0 — CodePing e leitura com o mouse
+
+- Marca CodePing em todos os idiomas, metadados, painel, aviso e bandeja. Recursos WPF e ícone carregam após a mudança do nome do assembly.
+- Logo original exportada em SVG/XAML, PNG transparente e ICO. As nove imagens PNG do ICO têm as dimensões declaradas, de 16 a 256 px; as capturas reais mostram a integração da marca no tema Claro.
+- **103 verificações do núcleo/catálogos**, incluindo migração idempotente de hooks, preservação de handlers de terceiros, diagnóstico dos dois nomes na mesma pasta e exclusão de outra instalação. O apphost de compatibilidade foi executado com JSON UTF-8 por stdin e entregou o evento ao CodePing.
+- **161 verificações WPF** aprovadas: fechamento normal em aproximadamente três segundos; permanência após 3,3 segundos com o ponteiro sobre o aviso; fechamento imediato ao sair; saída antes do prazo sem fechamento antecipado ou reinício do relógio; tradução do modo de leitura nos seis idiomas sem recriar a janela.
+- Os testes de prazo posicionam o popup fora da área física do cursor e enviam os eventos de mouse à superfície real do aviso, evitando interferência de movimentos do usuário. As capturas renderizam os controles nativos do aplicativo.
+- **15 verificações de retenção** aprovadas, incluindo pacotes e distribuições das duas marcas. A saída limpa não contém ClaudeAlerta.dll; CodePing.exe e ClaudeAlerta.exe têm SHA-256 idêntico e carregam o mesmo CodePing.dll.
+- Revisão independente identificou diagnóstico incorreto quando hooks e processo usavam nomes diferentes da mesma instalação. A falha foi reproduzida, corrigida e coberta por testes.
+- Dados, mutex, caminho de instalação e marcador dos hooks mantidos para preservar configurações e impedir monitores duplicados. O caminho do executável principal passa a CodePing.exe; o alias antigo é da versão atual.
+- Evidências: `artifacts/tests/78ef9763679d4848a7131d2a50cb8fbf/core/results.json` e `ui/results.json`; captura do modo de leitura em `docs/images/aviso-leitura.png`.
+
 ## Versão 1.5.0 — identificação de projeto e conversa
 
 - Publicação Windows x64 com runtime incluído, sem novos pacotes de terceiros.

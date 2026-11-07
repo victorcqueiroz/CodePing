@@ -1,10 +1,12 @@
-# Claude Alert
+# CodePing
+
+![CodePing](Assets/codeping-logo.svg)
 
 **Um aviso breve quando o Claude Code precisar de você. Uma fila para quando você puder voltar.**
 
-Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompanha sessões locais do Claude Code, inclusive dentro do VS Code, e avisa sobre perguntas, autorizações, respostas concluídas e erros. O aviso dura **três segundos**, se recolhe automaticamente e não solicita o foco da digitação.
+Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompanha sessões locais do Claude Code, inclusive dentro do VS Code, e avisa sobre perguntas, autorizações, respostas concluídas e erros. O aviso conta **três segundos** e não solicita o foco da digitação. Com o mouse sobre ele, permanece visível para leitura; ao retirar o mouse depois do prazo, fecha imediatamente.
 
-**Versão 1.5.0 · tema Claro · seis idiomas.** Em português, o aplicativo se chama Claude Alerta. Consulte o [histórico de versões](CHANGELOG.md) e a [organização visual aprovada](design/NAVEGACAO.md).
+**Versão 1.6.0 · tema Claro · seis idiomas.** A marca é CodePing nos seis idiomas. Consulte o [histórico de versões](CHANGELOG.md) e a [organização visual aprovada](design/NAVEGACAO.md).
 
 ![Sessões e perfis com personalização aberta no tema Claro](docs/images/painel-claro.png)
 
@@ -12,8 +14,8 @@ Aplicativo local para **Windows 10/11 x64**, feito em C# / .NET 10 e WPF. Acompa
 
 ## Baixar e executar
 
-1. Abra a [versão mais recente](https://github.com/victorcqueiroz/Claude-Alert/releases/latest) e baixe `ClaudeAlert-1.5.0-win-x64.zip`.
-2. Extraia **todos os arquivos** para uma pasta definitiva e abra `ClaudeAlerta.exe`.
+1. Abra a [versão mais recente](https://github.com/victorcqueiroz/Claude-Alert/releases/latest) e baixe `CodePing-1.6.0-win-x64.zip`.
+2. Extraia **todos os arquivos** para uma pasta definitiva e abra `CodePing.exe`.
 3. Abra **Preferências → Ativar integração**. Se já estiver configurada, a ação aparece como **Atualizar integração**.
 4. Abra uma nova conversa do Claude Code no VS Code para carregar a configuração.
 5. Use **Preferências → Testar aviso**. Você pode fechar o painel e deixá-lo na bandeja.
@@ -23,10 +25,20 @@ O pacote inclui o runtime .NET; não é necessário instalar o SDK para usar. Re
 O arquivo `SHA256SUMS.txt` da publicação permite conferir o ZIP:
 
 ```powershell
-Get-FileHash .\ClaudeAlert-1.5.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\CodePing-1.6.0-win-x64.zip -Algorithm SHA256
 ```
 
 Mantenha os arquivos do pacote juntos. Os hooks guardam o caminho do executável; se mudar de pasta, atualize a integração na nova localização.
+
+## Marca e compatibilidade
+
+CodePing é o novo nome do antigo Claude Alert / Claude Alerta. A logo combina um símbolo de código com um ponto de notificação; o azul acompanha o tema Claro, e o verde identifica o ping.
+
+O pacote traz **CodePing.exe** como executável principal. `ClaudeAlerta.exe` é uma cópia do apphost **desta mesma versão**, para manter funcionando atalhos e hooks que já carregaram o caminho antigo. Ambos usam o mesmo monitor e os mesmos dados, sem iniciar duas instâncias. Atualize a integração para usar o nome novo.
+
+Os dados continuam em `%LOCALAPPDATA%\ClaudeAlerta`, preservando preferências, idiomas, perfis, apelidos, pendências e histórico. Na máquina de desenvolvimento, a pasta de instalação continua `release/ClaudeAlerta`; o arquivo principal agora é `CodePing.exe`. O repositório GitHub mantém seu endereço atual.
+
+Os arquivos da marca estão em [Assets](Assets/README.md): SVG editável, PNG transparente e ICO com nove tamanhos. Para gerar novamente os PNGs e o ICO no Windows, use `scripts/brand-assets.ps1`.
 
 ## Navegação lateral
 
@@ -89,13 +101,15 @@ Em **Preferências**, escolha a política global:
 
 São **até três lembretes adicionais por solicitação**. Adiar reinicia esse limite e agenda o próximo lembrete para o prazo escolhido. Mesmo com repetições automáticas desativadas, um adiamento explícito agenda um único retorno. Perfil, regras do projeto e preferências de popup/som continuam sendo respeitados. Solicitações diferentes não abrem lembretes simultâneos; o monitor espaça esses lembretes em pelo menos dez segundos.
 
-Respostas concluídas e erros recebem um aviso inicial quando permitido, sem repetições automáticas. A duração de qualquer popup continua sendo três segundos.
+Respostas concluídas e erros recebem um aviso inicial quando permitido, sem repetições automáticas. O relógio do popup continua sendo de três segundos. Se o mouse estiver sobre o aviso ao vencer esse prazo, ele permanece visível e mostra **Em leitura**. Ao sair depois do prazo, fecha imediatamente. Entrar ou sair antes não pausa nem reinicia a contagem.
 
 ![Aviso que se recolhe automaticamente em três segundos](docs/images/aviso-claro.png)
 
+![Aviso mantido aberto para leitura com o mouse](docs/images/aviso-leitura.png)
+
 ## Identificar projeto e conversa
 
-O aviso destaca **o projeto**, mostra **a conversa** em linha própria e informa o estado: resposta concluída, autorização, pergunta ou erro. Continua fechando automaticamente em três segundos, sem solicitar foco.
+O aviso destaca **o projeto**, mostra **a conversa** em linha própria e informa o estado: resposta concluída, autorização, pergunta ou erro. Fecha automaticamente após três segundos, respeitando a permanência do mouse para leitura, sem solicitar foco.
 
 A identificação segue esta ordem:
 
@@ -189,7 +203,7 @@ cd Claude-Alert
 .\scripts\package.ps1 -SkipBuild
 ```
 
-A publicação fica em `artifacts/publish/win-x64/`; o ZIP e seu SHA-256 ficam em `artifacts/releases/1.5.0/`. Para usar outro SDK local, informe `-Dotnet C:\caminho\dotnet.exe` aos scripts de compilação, teste ou empacotamento.
+A publicação fica em `artifacts/publish/win-x64/`; o ZIP e seu SHA-256 ficam em `artifacts/releases/1.6.0/`. Para usar outro SDK local, informe `-Dotnet C:\caminho\dotnet.exe` aos scripts de compilação, teste ou empacotamento.
 
 ### Manter somente a última release local
 
@@ -202,7 +216,7 @@ Para limpar também distribuições antigas em `release/` e `artifacts/` de uma 
 .\scripts\clean-releases.ps1 -LegacyRoot 'C:\caminho\da\pasta-de-trabalho'
 ```
 
-A limpeza exige um pacote atual válido. Ela só remove pastas antigas identificadas como Claude Alert, confere os caminhos e rejeita links/junções. A instalação sem sufixo `release/ClaudeAlerta`, os dados pessoais, outros projetos e o histórico no GitHub são preservados. Atualizações locais devem substituir a pasta única da instalação e descartar os binários antigos após a validação, sem manter backups de releases anteriores.
+A limpeza exige um pacote atual válido. Ela só remove pastas antigas identificadas como CodePing ou Claude Alert, confere os caminhos e rejeita links/junções. A instalação sem sufixo `release/ClaudeAlerta`, os dados pessoais, outros projetos e o histórico no GitHub são preservados. Atualizações locais devem substituir a pasta única da instalação e descartar os binários antigos após a validação, sem manter backups de releases anteriores.
 
 Depois de compilar, execute `scripts/test-cleanup.ps1` para testar essa retenção em pastas isoladas, incluindo a preservação de outros projetos e a integração com o empacotamento.
 

@@ -1,5 +1,19 @@
 # Histórico de versões
 
+## 1.6.0 — 2026-11-06
+
+### Adicionado
+
+- Identidade **CodePing** em todos os idiomas, janela, bandeja, aviso e metadados do aplicativo.
+- Logo original em SVG/XAML, PNG transparente e ICO com nove resoluções, integrada ao painel, ao aviso e ao executável.
+- Aviso permanece visível enquanto o mouse está sobre ele, mesmo após os três segundos. Sair depois do prazo fecha imediatamente; sair antes não pausa nem reinicia a contagem. Indicação **Em leitura** nos seis idiomas.
+
+### Compatibilidade
+
+- Executável principal `CodePing.exe`; `ClaudeAlerta.exe` passa a ser uma cópia do apphost atual para atalhos e hooks já carregados, sem conservar uma versão antiga.
+- Configurações, dados, mutex e marcador do hook preservados. Integração e diagnóstico reconhecem ambos os nomes na mesma instalação, sem duplicar handlers.
+- Pacote `CodePing-1.6.0-win-x64.zip`; retenção reconhece releases das duas marcas. Compilação prepara uma saída limpa antes de substituir a publicação anterior.
+
 ## 1.5.0 — 2026-11-06
 
 ### Adicionado

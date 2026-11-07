@@ -7,6 +7,7 @@ namespace ClaudeAlerta;
 
 internal static class Program
 {
+    // Stable across the rename: legacy hooks must not launch a second monitor.
     internal const string MutexName = @"Local\ClaudeAlerta.Desktop.v1";
     [STAThread]
     static int Main(string[] args)

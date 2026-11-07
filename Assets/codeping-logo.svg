@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 112" role="img" aria-labelledby="title">
+ <title id="title">CodePing</title>
+ <g transform="translate(8 8) scale(1.5)"><rect width="64" height="64" rx="16" fill="#125FB5"/><path d="M25 22 15 32 25 42M36 22 46 32 36 42" fill="none" stroke="#FFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="49" cy="15" r="8" fill="#288568" stroke="#FFF" stroke-width="3"/></g>
+ <text x="124" y="76" fill="#192638" font-family="Segoe UI,Arial,sans-serif" font-size="56" font-weight="600" letter-spacing="-1.5">CodePing</text>
+</svg>

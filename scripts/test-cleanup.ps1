@@ -16,7 +16,7 @@ function Write-Fixture([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text)
 }
 try {
-    $sample = Join-Path $projectRoot 'artifacts\publish\win-x64\ClaudeAlerta.exe'
+    $sample = Join-Path $projectRoot 'artifacts\publish\win-x64\CodePing.exe'
     $sampleVersion = [version]((Get-Item -LiteralPath $sample).VersionInfo.ProductVersion -split '\+')[0]
     $keep = '{0}.{1}.0' -f $sampleVersion.Major, ($sampleVersion.Minor + 1)
     $newer = '{0}.{1}.0' -f $sampleVersion.Major, ($sampleVersion.Minor + 2)
@@ -26,18 +26,23 @@ try {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'clean-releases.ps1') -Destination $cleanup
     Write-Fixture (Join-Path $repo 'ClaudeAlerta.csproj') "<Project><PropertyGroup><Version>$keep</Version></PropertyGroup></Project>"
     $packages = Join-Path $repo 'artifacts\releases'
-    $zipName = "ClaudeAlert-$keep-win-x64.zip"
+    $zipName = "CodePing-$keep-win-x64.zip"
     $zip = Join-Path $packages "$keep\$zipName"
     $sum = Join-Path $packages "$keep\SHA256SUMS.txt"
     Write-Fixture $zip 'isolated-package-fixture'
     Write-Fixture $sum 'invalid-checksum'
     $oldPackage = Join-Path $packages '1.0.0'
     Write-Fixture (Join-Path $oldPackage 'ClaudeAlert-1.0.0-win-x64.zip') 'old-fixture'
+    $oldCodePing = Join-Path $packages '0.8.0'
+    Write-Fixture (Join-Path $oldCodePing 'CodePing-0.8.0-win-x64.zip') 'old-codeping-fixture'
     Write-Fixture (Join-Path $packages "$newer\ClaudeAlert-$newer-win-x64.zip") 'newer-fixture'
     Write-Fixture (Join-Path $packages '0.9.0\notes.txt') 'unrecognized content'
     $oldInstall = Join-Path $fixture ('release\ClaudeAlerta-' + $sampleVersion + '-backup-test')
     [void][IO.Directory]::CreateDirectory($oldInstall)
     Copy-Item -LiteralPath $sample -Destination (Join-Path $oldInstall 'ClaudeAlerta.exe')
+    $oldCodePingInstall = Join-Path $fixture ('release\CodePing-' + $sampleVersion + '-backup-test')
+    [void][IO.Directory]::CreateDirectory($oldCodePingInstall)
+    Copy-Item -LiteralPath $sample -Destination (Join-Path $oldCodePingInstall 'CodePing.exe')
     Write-Fixture (Join-Path $fixture 'release\ClaudeAlerta\keep.txt') 'current installation'
     Write-Fixture (Join-Path $fixture 'release\CasaCameras-1.0.0\keep.txt') 'other project'
     Write-Fixture (Join-Path $fixture 'artifacts\ClaudeAlerta-1.0.0-foreign\ClaudeAlerta.exe') 'not a Claude Alert executable'
@@ -53,7 +58,8 @@ try {
     Check ((Test-Path -LiteralPath $oldPackage) -and (Test-Path -LiteralPath $oldInstall)) 'WhatIf não remove pastas'
 
     $removed = @(& $cleanup -LegacyRoot $fixture)
-    Check ($removed.Count -eq 2) 'Remove somente o pacote antigo e a instalação antiga identificada'
+    Check ($removed.Count -eq 4) 'Remove somente pacotes e instalações antigos das duas marcas'
+    Check ((-not (Test-Path -LiteralPath $oldCodePing)) -and (-not (Test-Path -LiteralPath $oldCodePingInstall))) 'Reconhece versões antigas com o nome CodePing'
     Check ((-not (Test-Path -LiteralPath $oldPackage)) -and (-not (Test-Path -LiteralPath $oldInstall))) 'Versões antigas identificadas foram eliminadas'
     Check ((Test-Path -LiteralPath $zip) -and (Test-Path -LiteralPath $sum)) 'Mantém o pacote atual e seu checksum'
     Check (Test-Path -LiteralPath (Join-Path $packages $newer)) 'Preserva versão mais nova que a solicitada'
@@ -73,11 +79,11 @@ try {
     foreach ($name in @('README.md','VALIDACAO.md','CHANGELOG.md','docs\example.txt','design\example.txt')) { Write-Fixture (Join-Path $packageRepo $name) 'isolated packaging fixture' }
     $publish = Join-Path $packageRepo 'artifacts\publish\win-x64'
     [void][IO.Directory]::CreateDirectory($publish)
-    Copy-Item -LiteralPath $sample -Destination (Join-Path $publish 'ClaudeAlerta.exe')
+    Copy-Item -LiteralPath $sample -Destination (Join-Path $publish 'CodePing.exe')
     $old = Join-Path $packageRepo 'artifacts\releases\0.1.0'
     Write-Fixture (Join-Path $old 'ClaudeAlert-0.1.0-win-x64.zip') 'old package'
     & (Join-Path $packageRepo 'scripts\package.ps1') -SkipBuild | Out-Null
-    $newZip = Join-Path $packageRepo "artifacts\releases\$actual\ClaudeAlert-$actual-win-x64.zip"
+    $newZip = Join-Path $packageRepo "artifacts\releases\$actual\CodePing-$actual-win-x64.zip"
     Check ((Test-Path -LiteralPath $newZip) -and (-not (Test-Path -LiteralPath $old))) 'Empacotamento aplica a retenção automaticamente'
     $newSum = Join-Path (Split-Path -Parent $newZip) 'SHA256SUMS.txt'
     $expected = (Get-FileHash -LiteralPath $newZip).Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($newZip)

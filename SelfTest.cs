@@ -14,6 +14,8 @@ internal static class SelfTest
         {
             void Check(bool condition, string name)
             { if (!condition) throw new Exception(name); checks.Add(name); }
+            Check(L.Languages.All(language => L.Catalog(language.Code)["AppTitle"] == "CodePing"), "Marca CodePing aparece em todos os idiomas");
+            Check(System.Diagnostics.FileVersionInfo.GetVersionInfo(Environment.ProcessPath!).ProductName == "CodePing", "Metadados do executável identificam CodePing");
             Signal Event(string name, string tool = "", string id = "", string notification = "", string session = "one") =>
                 new(session, @"C:\projects\example", name, tool, id, notification, DateTimeOffset.UtcNow);
             var state = new MonitorState();
@@ -174,6 +176,23 @@ internal static class SelfTest
             Check(original.ToJsonString() == installed, "Instalação repetida não duplica hooks");
             HookInstaller.Merge(original, @"C:\app\ClaudeAlerta.exe", true);
             Check(original.ToJsonString() == before, "Desinstalação preserva todos os hooks anteriores");
+            var migration = JsonNode.Parse(installed)!.AsObject();
+            HookInstaller.Merge(migration, @"C:\app\CodePing.exe", false);
+            string migrated = migration.ToJsonString();
+            Check(!migrated.Contains("ClaudeAlerta.exe") && migrated.Contains("CodePing.exe") && migrated.Contains("existing-hook"), "Migração para CodePing preserva hooks de terceiros");
+            HookInstaller.Merge(migration, @"C:\app\CodePing.exe", false);
+            Check(migration.ToJsonString() == migrated, "Atualizar integração CodePing não duplica hooks");
+            HookInstaller.Merge(migration, @"C:\app\CodePing.exe", true);
+            Check(migration.ToJsonString() == before, "Remover integração reconhece hooks das duas marcas");
+            var currentHooks = HookInstaller.Merge(new JsonObject(), Environment.ProcessPath!, false);
+            Storage.Atomic(Storage.Settings, currentHooks.ToJsonString());
+            Check(HookInstaller.Installed(), "Diagnóstico reconhece integração do executável principal");
+            string aliasPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "ClaudeAlerta.exe");
+            Storage.Atomic(Storage.Settings, HookInstaller.Merge(new JsonObject(), aliasPath, false).ToJsonString());
+            Check(HookInstaller.Installed(), "Diagnóstico reconhece alias atual na mesma pasta");
+            Storage.Atomic(Storage.Settings, HookInstaller.Merge(new JsonObject(), Path.Combine(Storage.Root, "other", "CodePing.exe"), false).ToJsonString());
+            Check(!HookInstaller.Installed(), "Diagnóstico não confunde outra instalação com a atual");
+            Storage.Atomic(Storage.Settings, currentHooks.ToJsonString());
             safe.Enqueue();
             var queued = Directory.GetFiles(Storage.Inbox, "*.json");
             Check(queued.Length > 0 && JsonSerializer.Deserialize<Signal>(File.ReadAllText(queued[0]))?.Session == "safe", "Fila faz ida e volta com JSON válido");
@@ -188,6 +207,14 @@ internal static class SelfTest
                 Check(hook.ExitCode == 0 && hook.StandardOutput.ReadToEnd().Length == 0, "Executável em modo hook encerra sem produzir decisão ou saída");
                 var actual = Directory.GetFiles(Storage.Inbox, "*.json").Select(File.ReadAllText).Single(json => json.Contains("hook-roundtrip"));
                 Check(!actual.Contains("SECRET") && JsonSerializer.Deserialize<Signal>(actual)?.Tool == "Bash", "Protocolo stdin grava somente metadados filtrados");
+                using var aliasHook = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(aliasPath)
+                { ArgumentList = { HookInstaller.Marker }, RedirectStandardInput = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), UseShellExecute = false, CreateNoWindow = true })!;
+                aliasHook.StandardInput.Write("{\"session_id\":\"alias-roundtrip\",\"hook_event_name\":\"SessionStart\",\"session_title\":\"Compatível\"}");
+                aliasHook.StandardInput.Close();
+                if (!aliasHook.WaitForExit(5000)) { aliasHook.Kill(); throw new Exception("Alias excedeu prazo"); }
+                Check(aliasHook.ExitCode == 0 && Directory.GetFiles(Storage.Inbox, "*.json").Select(File.ReadAllText)
+                    .Select(json => JsonSerializer.Deserialize<Signal>(json)).Any(signal => signal?.Session == "alias-roundtrip" && signal.Title == "Compatível"),
+                    "Apphost de compatibilidade executa CodePing e entrega o hook real");
             }
             var legacy = JsonSerializer.Deserialize<Preferences>("{\"Sound\":false,\"Popup\":true,\"ReminderSeconds\":30}")!;
             Check(legacy.Language == L.DefaultLanguage && !legacy.Sound && legacy.Popup && legacy.ReminderSeconds == 30,

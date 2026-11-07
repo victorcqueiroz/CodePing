@@ -6,10 +6,15 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>ClaudeAlerta</AssemblyName>
-    <Version>1.5.0</Version>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts/**</DefaultItemExcludes>
+    <AssemblyName>CodePing</AssemblyName>
+    <RootNamespace>ClaudeAlerta</RootNamespace>
+    <Product>CodePing</Product>
+    <Title>CodePing</Title>
+    <Description>Avisos breves e sessões do Claude Code no Windows.</Description>
+    <Version>1.6.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>claude-alerta.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\codeping.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="System.Windows.Forms" />

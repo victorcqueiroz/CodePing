@@ -7,6 +7,7 @@ namespace ClaudeAlerta;
 internal static class Storage
 {
     internal static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
+    // Keep the existing data path across the CodePing rename.
     internal static string Root => Environment.GetEnvironmentVariable("CLAUDE_ALERT_DATA") ??
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ClaudeAlerta");
     internal static string Inbox => Path.Combine(Root, "inbox");
@@ -56,7 +57,8 @@ internal static class HookInstaller
 
     internal static bool IsOurs(JsonNode? hook) => hook is JsonObject obj &&
         obj["args"] is JsonArray args && args.Any(a => a?.ToString() == Marker) &&
-        Path.GetFileName(obj["command"]?.ToString())?.Equals("ClaudeAlerta.exe", StringComparison.OrdinalIgnoreCase) == true;
+        (Path.GetFileName(obj["command"]?.ToString())?.Equals("ClaudeAlerta.exe", StringComparison.OrdinalIgnoreCase) == true ||
+         Path.GetFileName(obj["command"]?.ToString())?.Equals("CodePing.exe", StringComparison.OrdinalIgnoreCase) == true);
 
     internal static JsonObject Merge(JsonObject root, string exe, bool remove)
     {
@@ -120,7 +122,8 @@ internal static class HookInstaller
                 new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
             return Events.All(e => root?["hooks"]?[e] is JsonArray a && a.Any(x =>
                 x?["hooks"] is JsonArray h && h.Any(v => IsOurs(v) &&
-                    string.Equals(v?["command"]?.ToString(), Environment.ProcessPath, StringComparison.OrdinalIgnoreCase))));
+                    File.Exists(v?["command"]?.ToString()) &&
+                    string.Equals(Path.GetDirectoryName(v?["command"]?.ToString()), Path.GetDirectoryName(Environment.ProcessPath), StringComparison.OrdinalIgnoreCase))));
         }
         catch { return false; }
     }

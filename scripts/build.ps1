@@ -8,19 +8,32 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$publishFolder = Join-Path $projectRoot 'artifacts\publish\win-x64'
+$publishRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts\publish'))
+$publishFolder = Join-Path $publishRoot 'win-x64'
+$stageFolder = Join-Path $publishRoot ('build-' + [guid]::NewGuid().ToString('N'))
+function Assert-PublishTarget([string]$Target) {
+    $absolute = [IO.Path]::GetFullPath($Target)
+    if (-not $absolute.StartsWith($publishRoot + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Alvo fora da publicação.' }
+    $item = Get-Item -LiteralPath $absolute -Force -ErrorAction SilentlyContinue
+    while ($item) { if ($item.LinkType) { throw 'Publicação não permite links/junções.' }; $item = $item.Parent }
+    if (Test-Path -LiteralPath $absolute) { foreach ($entry in Get-ChildItem -LiteralPath $absolute -Recurse -Force) { if ($entry.LinkType) { throw 'Link na publicação.' } } }
+}
 
 Push-Location -LiteralPath $projectRoot
 try {
-    & $Dotnet publish .\ClaudeAlerta.csproj -c $Configuration -r win-x64 --self-contained true -o $publishFolder
+    & $Dotnet publish .\ClaudeAlerta.csproj -c $Configuration -r win-x64 --self-contained true -o $stageFolder
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish terminou com código $LASTEXITCODE." }
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $publishFolder 'LEIA-ME.md')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'VALIDACAO.md') -Destination $publishFolder
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $publishFolder
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $publishFolder -Recurse -Force
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'design') -Destination $publishFolder -Recurse -Force
+    foreach ($file in @('README.md','VALIDACAO.md','CHANGELOG.md')) { Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $stageFolder }
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $stageFolder 'LEIA-ME.md')
+    foreach ($folder in @('docs','design','Assets')) { Copy-Item -LiteralPath (Join-Path $projectRoot $folder) -Destination $stageFolder -Recurse -Force }
+    # Current apphost keeps already-loaded hooks and shortcuts working under the former filename.
+    Copy-Item -LiteralPath (Join-Path $stageFolder 'CodePing.exe') -Destination (Join-Path $stageFolder 'ClaudeAlerta.exe')
+    Assert-PublishTarget $publishFolder; Assert-PublishTarget $stageFolder
+    if (Test-Path -LiteralPath $publishFolder) { Remove-Item -LiteralPath $publishFolder -Recurse -Force }
+    Move-Item -LiteralPath $stageFolder -Destination $publishFolder
     Write-Host "Publicação concluída: $publishFolder"
 }
 finally {
+    if (Test-Path -LiteralPath $stageFolder) { Assert-PublishTarget $stageFolder; Remove-Item -LiteralPath $stageFolder -Recurse -Force }
     Pop-Location
 }

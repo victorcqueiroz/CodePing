@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Windows.Input;
 
 namespace ClaudeAlerta;
 
@@ -52,6 +53,7 @@ internal static class UiCheck
                     Signal Event(string session, string name, string tool = "", string id = "") => new(session,
                         session == "sample-one" ? @"C:\Exemplo\Meu projeto" : @"C:\Exemplo\Website pessoal", name, tool, id, "", DateTimeOffset.UtcNow);
                     Check(dashboard.ActivePage == "sessions" && dashboard.NavSessions.IsChecked == true, "Tela inicial é Sessões na navegação lateral");
+                    Check(dashboard.Title == "CodePing" && dashboard.BrandMark.Source is DrawingImage && dashboard.Icon != null, "Nome e logo carregam na janela e no ícone do aplicativo");
                     Check(!Descendants<TabControl>(dashboard).Any(), "Janela não contém abas padrão ou navegação em duas fileiras");
                     Check(dashboard.ProfileAction.Visibility == Visibility.Visible && dashboard.ProfileRulesSection.Visibility == Visibility.Visible,
                         "Personalização do perfil já começa aberta sem expansor");
@@ -208,6 +210,8 @@ internal static class UiCheck
                     }
                     dashboard.LanguageSelect.SelectedValue = "pt-BR";
                     dashboard.TestAlert(); var card = dashboard.VisibleCard!;
+                    // Keep physical cursor movement separate from the routed hover events below.
+                    card.Left = SystemParameters.VirtualScreenLeft - card.Width - 100;
                     var closed = new TaskCompletionSource(); var watch = Stopwatch.StartNew(); card.Closed += (_, _) => closed.TrySetResult();
                     await Task.Delay(250); Capture((FrameworkElement)card.Content, "claro-aviso.png");
                     Check(!card.ShowActivated && !card.ShowInTaskbar && card.Topmost, "Aviso permanece breve e sem solicitar foco");
@@ -215,9 +219,36 @@ internal static class UiCheck
                     Check(card.AlertTitle.Text == L.T("StatusPermission"), "Aviso aberto acompanha o idioma");
                     await closed.Task.WaitAsync(TimeSpan.FromSeconds(5)); dismissal = watch.Elapsed.TotalMilliseconds;
                     Check(dismissal >= 2700 && dismissal < 4500 && dashboard.VisibleCard == null, "Aviso fecha em três segundos sem clique nem reinício do prazo");
+                    dashboard.TestAlert(); var heldCard = dashboard.VisibleCard!; await Idle();
+                    heldCard.Left = SystemParameters.VirtualScreenLeft - heldCard.Width - 100; await Idle();
+                    var surface = heldCard.AlertSurface;
+                    surface.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.MouseEnterEvent });
+                    await Task.Delay(3300);
+                    Check(ReferenceEquals(dashboard.VisibleCard, heldCard) && heldCard.IsVisible, "Mouse sobre o aviso impede fechamento após três segundos");
+                    Check(heldCard.Countdown.Text == L.T("ToastReading") && heldCard.TimeScale.ScaleX == 0 && !heldCard.ShowActivated, "Leitura mantém prazo vencido sem solicitar foco");
+                    foreach (var language in L.Languages)
+                    {
+                        dashboard.LanguageSelect.SelectedValue = language.Code; await Idle();
+                        Check(ReferenceEquals(dashboard.VisibleCard, heldCard) && heldCard.Countdown.Text == L.T("ToastReading"), "Modo de leitura acompanha o idioma sem reiniciar o prazo: " + language.Code);
+                        if (language.Code == "pt-BR") Capture((FrameworkElement)heldCard.Content, "codeping-aviso-leitura.png");
+                    }
+                    dashboard.LanguageSelect.SelectedValue = "de";
+                    surface.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.MouseLeaveEvent });
+                    await Idle();
+                    Check(dashboard.VisibleCard == null, "Sair do aviso após o prazo fecha imediatamente");
+                    dashboard.TestAlert(); var earlyCard = dashboard.VisibleCard!; await Idle();
+                    earlyCard.Left = SystemParameters.VirtualScreenLeft - earlyCard.Width - 100; await Idle();
+                    var earlyWatch = Stopwatch.StartNew(); var earlyClosed = new TaskCompletionSource(); earlyCard.Closed += (_, _) => earlyClosed.TrySetResult();
+                    earlyCard.AlertSurface.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.MouseEnterEvent });
+                    await Task.Delay(900);
+                    earlyCard.AlertSurface.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.MouseLeaveEvent });
+                    Check(ReferenceEquals(dashboard.VisibleCard, earlyCard), "Sair antes do prazo não fecha antecipadamente");
+                    await earlyClosed.Task.WaitAsync(TimeSpan.FromSeconds(4));
+                    Check(earlyWatch.Elapsed.TotalMilliseconds >= 2700 && earlyWatch.Elapsed.TotalMilliseconds < 3600, "Mouse não pausa nem reinicia os três segundos");
                     dashboard.Receive(Event("sample-one", "PreToolUse", "ExitPlanMode", "plan"), false);
                     Check(dashboard.VisibleCard != null, "Evento de ação abre aviso no perfil normal");
                     var realCard = dashboard.VisibleCard!; var realClosed = new TaskCompletionSource();
+                    realCard.Left = SystemParameters.VirtualScreenLeft - realCard.Width - 100;
                     var realWatch = Stopwatch.StartNew(); realCard.Closed += (_, _) => realClosed.TrySetResult();
                     Check(realCard.ProjectLabel.Text == "Projeto favorito" && realCard.ConversationLabel.Text == "Gespräch: Gravação das câmeras", "Aviso real combina projeto e conversa da sessão correta");
                     Check(realCard.ProjectLabel.FontSize > realCard.AlertTitle.FontSize && Grid.GetRow(realCard.ProjectLabel) < Grid.GetRow(realCard.ConversationLabel), "Projeto e conversa têm destaque antes do estado");

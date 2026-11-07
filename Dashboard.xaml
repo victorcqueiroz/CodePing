@@ -13,6 +13,7 @@
   <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="176" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
    <Border Background="{DynamicResource Ground}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0"><DockPanel Margin="12,25,12,15">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,0,0,12"><Image x:Name="BrandMark" Source="{StaticResource CodePingMark}" Width="25" Height="25" AutomationProperties.Name="CodePing" /><TextBlock Text="CodePing" Foreground="{DynamicResource Ink}" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Margin="9,0,0,0" /></StackPanel>
     <TextBlock DockPanel.Dock="Top" Text="{DynamicResource Loc.YourMonitor}" Style="{StaticResource SecondaryText}" FontSize="11" Margin="10,0,0,14" />
     <RadioButton x:Name="NavPreferences" DockPanel.Dock="Bottom" Tag="prefs" GroupName="Navigation" Style="{StaticResource NavigationItem}" Checked="Navigation_Checked" AutomationProperties.Name="{DynamicResource Loc.Preferences}"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE713;" FontFamily="{DynamicResource IconFont}" Style="{StaticResource NavigationText}" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{DynamicResource Loc.Preferences}" Style="{StaticResource NavigationText}" /></StackPanel></RadioButton>
     <StackPanel>

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Interop;
+using System.Windows.Input;
 
 namespace ClaudeAlerta;
 
@@ -13,6 +14,7 @@ public partial class AlertCard : Window
     readonly SessionState session;
     readonly Preferences prefs;
     readonly string status;
+    bool pointerInside;
     internal string SessionId { get; }
     internal AlertCard(SessionState session, string status, Preferences prefs, Action open, Action acknowledge, Action snooze)
     {
@@ -35,7 +37,12 @@ public partial class AlertCard : Window
         timer.Tick += (_, _) =>
         {
             double remaining = 3 - elapsed.Elapsed.TotalSeconds;
-            if (remaining <= 0) { timer.Stop(); Close(); return; }
+            if (remaining <= 0)
+            {
+                timer.Stop(); TimeScale.ScaleX = 0;
+                if (pointerInside) { Countdown.Text = L.T("ToastReading"); return; }
+                Close(); return;
+            }
             Countdown.Text = L.F("Seconds", Math.Ceiling(remaining));
             TimeScale.ScaleX = SystemParameters.ClientAreaAnimation ? remaining / 3 : 1;
         };
@@ -50,7 +57,13 @@ public partial class AlertCard : Window
         ConversationLabel.Text = L.F("ConversationLabel", SessionId == "demo" ? L.T("ExampleConversation") : prefs.ConversationName(session));
         ConversationLabel.ToolTip = ConversationLabel.Text + "\n" + L.F("SessionIdentifier", SessionId);
         DeferToastButton.Visibility = status is "Resposta concluída" or "Claude interrompido por erro" || SessionId == "demo" ? Visibility.Collapsed : Visibility.Visible;
-        Countdown.Text = L.F("Seconds", Math.Max(1, Math.Ceiling(3 - elapsed.Elapsed.TotalSeconds)));
+        Countdown.Text = pointerInside && elapsed.Elapsed.TotalSeconds >= 3 ? L.T("ToastReading") : L.F("Seconds", Math.Max(1, Math.Ceiling(3 - elapsed.Elapsed.TotalSeconds)));
+    }
+    void Pointer_Enter(object sender, MouseEventArgs e) => pointerInside = true;
+    void Pointer_Leave(object sender, MouseEventArgs e)
+    {
+        pointerInside = false;
+        if (elapsed.IsRunning && elapsed.Elapsed.TotalSeconds >= 3) Close();
     }
     void Open_Click(object sender, RoutedEventArgs e) => open();
     void Acknowledge_Click(object sender, RoutedEventArgs e) => acknowledge();

@@ -3,13 +3,13 @@
         ShowInTaskbar="False" ShowActivated="False" Topmost="True" ResizeMode="NoResize" WindowStartupLocation="Manual"
         FontFamily="{DynamicResource UiFont}" FontSize="13" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
     <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="ClaroTheme.xaml" /></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
-    <Grid><Border Margin="10" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12">
+    <Grid><Border x:Name="AlertSurface" Margin="10" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="12" MouseEnter="Pointer_Enter" MouseLeave="Pointer_Leave">
         <Border.Effect><DropShadowEffect Color="#26384F" BlurRadius="16" ShadowDepth="3" Opacity="0.18" /></Border.Effect>
         <Grid ClipToBounds="True">
             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="3" /></Grid.RowDefinitions>
             <Grid Margin="18,15,16,10">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <TextBlock Text="&#xEA8F;" Style="{StaticResource Glyph}" FontSize="19" VerticalAlignment="Top" Margin="0,3,0,0" />
+                <Image x:Name="ToastBrandMark" Source="{StaticResource CodePingMark}" Width="24" Height="24" VerticalAlignment="Top" Margin="0,2,0,0" AutomationProperties.Name="CodePing" />
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                     <DockPanel><TextBlock x:Name="Countdown" DockPanel.Dock="Right" Style="{StaticResource SecondaryText}" HorizontalAlignment="Right" /><TextBlock Text="{DynamicResource Loc.AppTitle}" Style="{StaticResource SecondaryText}" /></DockPanel>
